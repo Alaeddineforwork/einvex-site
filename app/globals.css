@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f4f7fb;
+  --foreground: #0f172a;
+  --line: rgba(15, 23, 42, 0.08);
+  --surface: rgba(255, 255, 255, 0.92);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@layer base {
+  * {
+    border-color: var(--line);
+  }
+
+  html {
+    background:
+      radial-gradient(circle at top, rgba(16, 185, 129, 0.08), transparent 28%),
+      #f8fafc;
+  }
+
+  body {
+    min-height: 100vh;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(244, 247, 251, 0.98)),
+      var(--background);
+    color: var(--foreground);
+    font-family: var(--font-geist-sans), sans-serif;
+  }
+
+  ::selection {
+    background: rgba(4, 120, 87, 0.18);
+    color: var(--foreground);
+  }
+}
+
+@layer components {
+  .page-shell {
+    @apply min-h-screen text-slate-950;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.78) 0%, rgba(248, 250, 252, 0.98) 100%);
+  }
+
+  .page-container {
+    @apply mx-auto max-w-6xl px-4 sm:px-6 md:px-12;
+  }
+
+  .page-hero {
+    @apply rounded-[2rem] border px-5 py-8 shadow-sm backdrop-blur-sm sm:px-8 sm:py-10 md:px-10 md:py-12;
+    border-color: rgba(148, 163, 184, 0.18);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.88));
+    box-shadow: 0 18px 45px -32px rgba(15, 23, 42, 0.42);
+  }
+
+  .eyebrow {
+    @apply text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700;
+  }
+
+  .page-title {
+    @apply mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl md:text-5xl;
+  }
+
+  .page-intro {
+    @apply mt-5 max-w-3xl text-base leading-7 text-slate-700 sm:mt-6 sm:text-lg sm:leading-8;
+  }
+
+  .surface-card {
+    @apply rounded-[1.75rem] border p-5 shadow-sm sm:p-6 md:p-8;
+    border-color: rgba(148, 163, 184, 0.16);
+    background: var(--surface);
+    box-shadow: 0 18px 40px -34px rgba(15, 23, 42, 0.38);
+  }
+
+  .surface-subtle {
+    @apply rounded-[1.4rem] border p-5 sm:p-6;
+    border-color: rgba(148, 163, 184, 0.14);
+    background: rgba(248, 250, 252, 0.92);
+  }
+
+  .section-label {
+    @apply text-sm font-medium uppercase tracking-[0.18em] text-slate-500;
+  }
+
+  .field-label {
+    @apply mb-2 block text-sm font-medium text-slate-700;
+  }
+
+  .field-control {
+    @apply w-full rounded-2xl border bg-white/95 px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400;
+    border-color: rgba(148, 163, 184, 0.32);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
+
+  .field-control:focus {
+    border-color: rgba(5, 150, 105, 0.8);
+    box-shadow:
+      0 0 0 4px rgba(16, 185, 129, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+}
