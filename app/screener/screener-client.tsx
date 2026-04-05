@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { ChangeEvent, useMemo, useState } from "react";
 import ScreeningSummary from "../screening-summary";
 import {
   CompanyScreeningData,
@@ -37,26 +37,32 @@ function getNormStatusValue(result: NormResultFilter) {
   return "under_review";
 }
 
+type ActiveNormFilter = {
+  selectedNorm: Exclude<NormFilter, "All norms">;
+  selectedNormResult: NormResultFilter;
+};
+
 function matchesNormSpecificFilter(
   company: CompanyScreeningData,
-  selectedNorm: NormFilter,
-  selectedNormResult: NormResultFilter
+  activeNormFilter: ActiveNormFilter | null
 ) {
-  if (selectedNorm === "All norms") {
+  if (!activeNormFilter) {
     return true;
   }
 
-  const normEntry = company.norms.find((norm) => norm.name === selectedNorm);
+  const normEntry = company.norms.find(
+    (norm) => norm.name === activeNormFilter.selectedNorm
+  );
 
   if (!normEntry) {
     return false;
   }
 
-  if (selectedNormResult === "Any result") {
+  if (activeNormFilter.selectedNormResult === "Any result") {
     return true;
   }
 
-  return normEntry.status === getNormStatusValue(selectedNormResult);
+  return normEntry.status === getNormStatusValue(activeNormFilter.selectedNormResult);
 }
 
 function matchesConsensusFilter(
@@ -101,6 +107,27 @@ export default function ScreenerClient() {
     []
   );
 
+  const activeNormFilter = useMemo<ActiveNormFilter | null>(() => {
+    if (normFilter === "All norms") {
+      return null;
+    }
+
+    return {
+      selectedNorm: normFilter,
+      selectedNormResult: normResultFilter,
+    };
+  }, [normFilter, normResultFilter]);
+
+  const handleNormFilterChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    const nextNorm = event.target.value as NormFilter;
+
+    setNormFilter(nextNorm);
+
+    if (nextNorm === "All norms") {
+      setNormResultFilter("Any result");
+    }
+  };
+
   const filteredCompanies = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
@@ -119,11 +146,7 @@ export default function ScreenerClient() {
         statusFilter === "All" || finalStatus === statusFilter;
       const matchesMarket =
         marketFilter === "All" || company.market === marketFilter;
-      const matchesNorm = matchesNormSpecificFilter(
-        company,
-        normFilter,
-        normResultFilter
-      );
+      const matchesNorm = matchesNormSpecificFilter(company, activeNormFilter);
 
       return (
         matchesSearch &&
@@ -136,9 +159,8 @@ export default function ScreenerClient() {
     });
   }, [
     consensusFilter,
+    activeNormFilter,
     marketFilter,
-    normFilter,
-    normResultFilter,
     searchQuery,
     sectorFilter,
     statusFilter,
@@ -232,7 +254,7 @@ export default function ScreenerClient() {
             <select
               className="field-control"
               value={normFilter}
-              onChange={(event) => setNormFilter(event.target.value as NormFilter)}
+              onChange={handleNormFilterChange}
             >
               <option value="All norms">All norms</option>
               <option value="AAOIFI">AAOIFI</option>
@@ -242,11 +264,12 @@ export default function ScreenerClient() {
             </select>
 
             <select
-              className="field-control"
+              className="field-control disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
               value={normResultFilter}
               onChange={(event) =>
                 setNormResultFilter(event.target.value as NormResultFilter)
               }
+              disabled={normFilter === "All norms"}
             >
               <option value="Any result">Any result</option>
               <option value="Sharia-compliant">Sharia-compliant</option>

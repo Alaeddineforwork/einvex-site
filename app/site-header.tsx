@@ -94,10 +94,9 @@ export default function SiteHeader() {
 
           <Link
             href="/early-access"
-            className="rounded-full bg-emerald-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-800 sm:px-5 sm:py-2.5 sm:text-sm"
+            className="whitespace-nowrap rounded-full bg-emerald-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-800 sm:px-5 sm:py-2.5 sm:text-sm"
           >
-            <span className="sm:hidden">Access</span>
-            <span className="hidden sm:inline">Early Access</span>
+            Early Access
           </Link>
         </div>
       </div>
