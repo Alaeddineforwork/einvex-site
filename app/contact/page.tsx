@@ -126,7 +126,7 @@ export default function ContactPage() {
           <div className="mt-8">
             <a
               href="/early-access"
-              className="inline-block rounded-full bg-emerald-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-emerald-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800 sm:w-auto"
             >
               Request Early Access
             </a>

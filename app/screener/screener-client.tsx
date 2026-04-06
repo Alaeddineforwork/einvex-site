@@ -1,170 +1,57 @@
 "use client";
 
-import { ChangeEvent, useMemo, useState } from "react";
-import ScreeningSummary from "../screening-summary";
+import { useMemo, useState } from "react";
 import {
-  CompanyScreeningData,
   FinalStatus,
   companies,
-  getConsensusScore,
-  getFinalStatus,
+  formatScreeningStatus,
   getStatusStyle,
 } from "../screening-data";
 
-type ConsensusFilter =
-  | "all"
-  | "75_and_above"
-  | "50_to_74"
-  | "below_50";
-
 type VisibleCount = "10" | "25" | "50" | "100" | "all";
-type NormFilter = "All norms" | "AAOIFI" | "Norm 2" | "Norm 3" | "Norm 4";
-type NormResultFilter =
-  | "Any result"
-  | "Sharia-compliant"
-  | "Not Sharia-compliant"
-  | "Under review";
-
-function getNormStatusValue(result: NormResultFilter) {
-  if (result === "Sharia-compliant") {
-    return "sharia_compliant";
-  }
-
-  if (result === "Not Sharia-compliant") {
-    return "not_sharia_compliant";
-  }
-
-  return "under_review";
-}
-
-type ActiveNormFilter = {
-  selectedNorm: Exclude<NormFilter, "All norms">;
-  selectedNormResult: NormResultFilter;
-};
-
-function matchesNormSpecificFilter(
-  company: CompanyScreeningData,
-  activeNormFilter: ActiveNormFilter | null
-) {
-  if (!activeNormFilter) {
-    return true;
-  }
-
-  const normEntry = company.norms.find(
-    (norm) => norm.name === activeNormFilter.selectedNorm
-  );
-
-  if (!normEntry) {
-    return false;
-  }
-
-  if (activeNormFilter.selectedNormResult === "Any result") {
-    return true;
-  }
-
-  return normEntry.status === getNormStatusValue(activeNormFilter.selectedNormResult);
-}
-
-function matchesConsensusFilter(
-  company: CompanyScreeningData,
-  consensusFilter: ConsensusFilter
-) {
-  if (consensusFilter === "all") {
-    return true;
-  }
-
-  const score = getConsensusScore(company.norms);
-
-  if (consensusFilter === "75_and_above") {
-    return score >= 75;
-  }
-
-  if (consensusFilter === "50_to_74") {
-    return score >= 50 && score <= 74;
-  }
-
-  return score < 50;
-}
 
 export default function ScreenerClient() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sectorFilter, setSectorFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState<"All" | FinalStatus>("All");
-  const [marketFilter, setMarketFilter] = useState("All");
-  const [consensusFilter, setConsensusFilter] = useState<ConsensusFilter>("all");
   const [visibleCount, setVisibleCount] = useState<VisibleCount>("10");
-  const [normFilter, setNormFilter] = useState<NormFilter>("All norms");
-  const [normResultFilter, setNormResultFilter] =
-    useState<NormResultFilter>("Any result");
 
   const sectorOptions = useMemo(
     () => ["All", ...new Set(companies.map((company) => company.sector))],
     []
   );
 
-  const marketOptions = useMemo(
-    () => ["All", ...new Set(companies.map((company) => company.market))],
-    []
-  );
-
-  const activeNormFilter = useMemo<ActiveNormFilter | null>(() => {
-    if (normFilter === "All norms") {
-      return null;
-    }
-
-    return {
-      selectedNorm: normFilter,
-      selectedNormResult: normResultFilter,
-    };
-  }, [normFilter, normResultFilter]);
-
-  const handleNormFilterChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    const nextNorm = event.target.value as NormFilter;
-
-    setNormFilter(nextNorm);
-
-    if (nextNorm === "All norms") {
-      setNormResultFilter("Any result");
-    }
-  };
-
   const filteredCompanies = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
-    return companies.filter((company) => {
-      const finalStatus = getFinalStatus(company.norms);
+    return companies
+      .filter((company) => {
+        const finalStatus = formatScreeningStatus(company.aaoifi.status);
 
-      const matchesSearch =
-        normalizedQuery.length === 0 ||
-        company.name.toLowerCase().includes(normalizedQuery) ||
-        company.ticker.toLowerCase().includes(normalizedQuery) ||
-        company.sector.toLowerCase().includes(normalizedQuery);
+        const matchesSearch =
+          normalizedQuery.length === 0 ||
+          company.name.toLowerCase().includes(normalizedQuery) ||
+          company.ticker.toLowerCase().includes(normalizedQuery) ||
+          company.sector.toLowerCase().includes(normalizedQuery);
 
-      const matchesSector =
-        sectorFilter === "All" || company.sector === sectorFilter;
-      const matchesStatus =
-        statusFilter === "All" || finalStatus === statusFilter;
-      const matchesMarket =
-        marketFilter === "All" || company.market === marketFilter;
-      const matchesNorm = matchesNormSpecificFilter(company, activeNormFilter);
+        const matchesSector =
+          sectorFilter === "All" || company.sector === sectorFilter;
+        const matchesStatus =
+          statusFilter === "All" || finalStatus === statusFilter;
 
-      return (
-        matchesSearch &&
-        matchesSector &&
-        matchesStatus &&
-        matchesMarket &&
-        matchesConsensusFilter(company, consensusFilter) &&
-        matchesNorm
-      );
-    });
-  }, [
-    consensusFilter,
-    activeNormFilter,
-    marketFilter,
-    searchQuery,
-    sectorFilter,
-    statusFilter,
-  ]);
+        return matchesSearch && matchesSector && matchesStatus;
+      })
+      .sort((left, right) => {
+        const leftIsAvailable = left.aaoifi.status !== "under_review";
+        const rightIsAvailable = right.aaoifi.status !== "under_review";
+
+        if (leftIsAvailable !== rightIsAvailable) {
+          return leftIsAvailable ? -1 : 1;
+        }
+
+        return left.name.localeCompare(right.name);
+      });
+  }, [searchQuery, sectorFilter, statusFilter]);
 
   const visibleCompanies = useMemo(() => {
     if (visibleCount === "all") {
@@ -186,7 +73,7 @@ export default function ScreenerClient() {
             onChange={(event) => setSearchQuery(event.target.value)}
           />
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <select
               className="field-control"
               value={visibleCount}
@@ -225,57 +112,6 @@ export default function ScreenerClient() {
               <option value="Not Sharia-compliant">Not Sharia-compliant</option>
               <option value="Under review">Under review</option>
             </select>
-
-            <select
-              className="field-control"
-              value={marketFilter}
-              onChange={(event) => setMarketFilter(event.target.value)}
-            >
-              {marketOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option === "All" ? "All markets" : option}
-                </option>
-              ))}
-            </select>
-
-            <select
-              className="field-control"
-              value={consensusFilter}
-              onChange={(event) =>
-                setConsensusFilter(event.target.value as ConsensusFilter)
-              }
-            >
-              <option value="all">All consensus ranges</option>
-              <option value="75_and_above">75% and above</option>
-              <option value="50_to_74">50% to 74%</option>
-              <option value="below_50">Below 50%</option>
-            </select>
-
-            <select
-              className="field-control"
-              value={normFilter}
-              onChange={handleNormFilterChange}
-            >
-              <option value="All norms">All norms</option>
-              <option value="AAOIFI">AAOIFI</option>
-              <option value="Norm 2">Norm 2</option>
-              <option value="Norm 3">Norm 3</option>
-              <option value="Norm 4">Norm 4</option>
-            </select>
-
-            <select
-              className="field-control disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
-              value={normResultFilter}
-              onChange={(event) =>
-                setNormResultFilter(event.target.value as NormResultFilter)
-              }
-              disabled={normFilter === "All norms"}
-            >
-              <option value="Any result">Any result</option>
-              <option value="Sharia-compliant">Sharia-compliant</option>
-              <option value="Not Sharia-compliant">Not Sharia-compliant</option>
-              <option value="Under review">Under review</option>
-            </select>
           </div>
 
           <p className="text-sm text-slate-500">
@@ -291,61 +127,111 @@ export default function ScreenerClient() {
             No companies match your search and filters.
           </p>
           <p className="mt-2 text-sm text-slate-500">
-            Try broadening your search, changing a filter, or resetting the consensus range.
+            Try broadening your search or changing a filter.
           </p>
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {visibleCompanies.map((company) => {
-            const finalStatus = getFinalStatus(company.norms);
+            const finalStatus = formatScreeningStatus(company.aaoifi.status);
+            const isLocked = company.aaoifi.status === "under_review";
 
             return (
-              <div key={company.ticker} className="surface-card p-6">
+              <div key={company.ticker} className="surface-card p-5 sm:p-6">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <h2 className="text-xl font-semibold text-slate-950">
+                    <h2 className="text-lg font-semibold text-slate-950 sm:text-xl">
                       {company.name}
                     </h2>
-                    <p className="mt-1 text-sm uppercase tracking-[0.18em] text-slate-500">
+                    <p className="mt-1 break-all text-xs uppercase tracking-[0.18em] text-slate-500 sm:text-sm">
                       {company.ticker}
                     </p>
                   </div>
 
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusStyle(
-                      finalStatus
-                    )}`}
-                  >
-                    {finalStatus}
-                  </span>
+                  {!isLocked ? (
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusStyle(
+                        finalStatus
+                      )}`}
+                    >
+                      {finalStatus}
+                    </span>
+                  ) : null}
                 </div>
 
                 <div className="mt-6">
                   <p className="section-label">Sector</p>
                   <p className="mt-1 text-base text-slate-900">{company.sector}</p>
                 </div>
-                <div className="mt-4">
-                  <p className="section-label">Market</p>
-                  <p className="mt-1 text-base text-slate-900">{company.market}</p>
-                </div>
 
-                <div className="mt-4">
-                  <p className="section-label">Screening Note</p>
-                  <p className="mt-1 text-sm leading-6 text-slate-700">{company.note}</p>
-                </div>
+                {isLocked ? (
+                  <div className="relative mt-5 min-h-[15.5rem] overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50/90 p-4 sm:min-h-[14rem] sm:p-5">
+                    <div className="space-y-4 blur-[3px] select-none">
+                      <div>
+                        <p className="section-label">Status</p>
+                        <div className="mt-2">
+                          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-500">
+                            Under review
+                          </span>
+                        </div>
+                      </div>
 
-                <ScreeningSummary
-                  norms={company.norms}
-                  finalStatus={finalStatus}
-                  className="mt-5"
-                />
+                      <div>
+                        <p className="section-label">Source</p>
+                        <p className="mt-1 text-base text-slate-900">AAOIFI</p>
+                      </div>
+
+                      <div>
+                        <p className="section-label">Comment</p>
+                        <p className="mt-1 text-sm leading-6 text-slate-700">
+                          AAOIFI screening for this company is not yet available.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/72 p-4 backdrop-blur-[2px] sm:p-5">
+                      <div className="max-w-xs text-center">
+                        <p className="text-sm font-semibold text-slate-900">
+                          Join the waitlist to access upcoming screenings
+                        </p>
+                        <p className="mt-2 text-sm leading-6 text-slate-600">
+                          AAOIFI screening for this company is not yet available.
+                        </p>
+                        <a
+                          href="/early-access"
+                          className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-800 sm:w-auto"
+                        >
+                          Join Early Access
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mt-4">
+                      <p className="section-label">Source</p>
+                      <p className="mt-1 text-base text-slate-900">AAOIFI</p>
+                    </div>
+
+                    <div className="mt-4">
+                      <p className="section-label">Comment</p>
+                      <p className="mt-1 text-sm leading-6 text-slate-700">
+                        {company.aaoifi.comment}
+                      </p>
+                    </div>
+                  </>
+                )}
 
                 <div className="mt-6">
                   <a
-                    href={`/companies/${company.ticker}`}
-                    className="inline-block rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700"
+                    href={isLocked ? "/early-access" : `/companies/${company.ticker}`}
+                    className={`inline-flex min-h-11 w-full items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold transition sm:w-auto ${
+                      isLocked
+                        ? "bg-emerald-700 text-white hover:bg-emerald-800"
+                        : "bg-slate-900 text-white hover:bg-slate-700"
+                    }`}
                   >
-                    View Details
+                    {isLocked ? "Join Early Access" : "View Details"}
                   </a>
                 </div>
               </div>

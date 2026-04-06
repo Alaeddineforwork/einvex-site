@@ -1,9 +1,12 @@
-import ScreeningSummary from "../../screening-summary";
 import {
   companyScreeningData,
   getFinalStatus,
   getStatusStyle,
 } from "../../screening-data";
+
+function getBusinessOverview(name: string, sector: string) {
+  return `${name} is listed on the Casablanca Stock Exchange and operates in the ${sector} sector.`;
+}
 
 export default async function CompanyDetailsPage({
   params,
@@ -22,7 +25,7 @@ export default async function CompanyDetailsPage({
               Company not found
             </h1>
             <p className="mt-4 text-slate-700">
-              We could not find details for this company in the current demo.
+              We could not find details for this company in the current coverage universe.
             </p>
             <a
               href="/screener"
@@ -36,7 +39,8 @@ export default async function CompanyDetailsPage({
     );
   }
 
-  const finalStatus = getFinalStatus(company.norms);
+  const finalStatus = getFinalStatus(company.aaoifi);
+  const businessOverview = getBusinessOverview(company.name, company.sector);
 
   return (
     <main className="page-shell">
@@ -54,7 +58,7 @@ export default async function CompanyDetailsPage({
             </div>
 
             <span
-              className={`h-fit rounded-full px-4 py-2 text-sm font-semibold ${getStatusStyle(
+              className={`h-fit self-start rounded-full px-4 py-2 text-sm font-semibold ${getStatusStyle(
                 finalStatus
               )}`}
             >
@@ -75,29 +79,50 @@ export default async function CompanyDetailsPage({
           </div>
 
           <div className="mt-10">
-            <p className="section-label">Overview</p>
-            <p className="mt-3 leading-8 text-slate-700">{company.description}</p>
+            <p className="section-label">Business Overview</p>
+            <p className="mt-3 leading-8 text-slate-700">{businessOverview}</p>
           </div>
 
-          <div className="mt-10">
-            <p className="section-label">Screening Note</p>
-            <p className="mt-3 leading-8 text-slate-700">{company.reasoning}</p>
-          </div>
+          <div className="mt-10 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-6">
+            <p className="section-label">Sharia Screening - AAOIFI Standard</p>
 
-          <ScreeningSummary norms={company.norms} finalStatus={finalStatus} className="mt-10" />
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div>
+                <p className="section-label">Source</p>
+                <p className="mt-2 text-base font-medium text-slate-900">AAOIFI</p>
+              </div>
+
+              <span
+                className={`h-fit rounded-full px-4 py-2 text-sm font-semibold ${getStatusStyle(
+                  finalStatus
+                )}`}
+              >
+                {finalStatus}
+              </span>
+            </div>
+
+            <div className="mt-6">
+              <p className="section-label">Comment</p>
+              <p className="mt-3 text-sm leading-7 text-slate-700">
+                {company.aaoifi.comment}
+              </p>
+            </div>
+          </div>
 
           <div className="mt-10 surface-subtle">
-            <p className="section-label">Disclaimer</p>
+            <p className="section-label">Methodology Disclaimer</p>
             <p className="mt-3 text-sm leading-7 text-slate-700">
-              This page is a product demo for preview purposes. Final screening
-              outputs and methodology may evolve as the EinveX framework is refined.
+              This screening is based on AAOIFI Sharia standards using publicly
+              available financial and business activity information. The
+              screening is provided for informational purposes only and does not
+              constitute investment advice.
             </p>
           </div>
 
           <div className="mt-10">
             <a
               href="/screener"
-              className="inline-block rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 sm:w-auto"
             >
               Back to Screener
             </a>

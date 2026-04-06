@@ -226,7 +226,7 @@ export default function AboutPage() {
                   </p>
                   <a
                     href={`mailto:${member.email}`}
-                    className="mt-4 inline-flex break-all text-sm text-emerald-700 transition hover:text-emerald-800"
+                    className="mt-4 inline-flex max-w-full break-all text-sm text-emerald-700 transition hover:text-emerald-800"
                   >
                     {member.email}
                   </a>

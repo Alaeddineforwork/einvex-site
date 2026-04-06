@@ -173,7 +173,7 @@ export default function EarlyAccessForm() {
 
       <button
         type="submit"
-        className="rounded-full bg-emerald-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-emerald-500"
+        className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-emerald-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-emerald-500 sm:w-auto"
         disabled={isSubmitting}
       >
         {isSubmitting ? "Submitting..." : "Request Early Access"}
