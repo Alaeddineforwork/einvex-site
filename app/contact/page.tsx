@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const socialLinks = [
   {
     href: "https://linkedin.com/company/einvex",
@@ -35,24 +37,43 @@ const socialLinks = [
   },
 ];
 
+export const metadata = {
+  title: "Contact — EinveX",
+  description:
+    "Get in touch with the EinveX team — partnership, investor, media, and early-access conversations welcome.",
+};
+
 export default function ContactPage() {
   return (
-    <main className="page-shell">
-      <div className="page-container py-16">
-        <section className="page-hero">
+    <main className="page-shell pt-[60px]">
+      <div className="page-container py-8 md:py-10">
+        <section className="page-hero grid-fade">
           <p className="eyebrow">Contact</p>
-          <h1 className="page-title">Let&apos;s connect around ethical investing</h1>
+          <h1 className="page-title">
+            Let&apos;s connect around ethical investing.
+          </h1>
           <p className="page-intro">
-            Whether you are an investor, potential partner, early user, or simply
-            curious about EinveX, we would be glad to hear from you.
+            Whether you are an investor, potential partner, early user, or
+            simply curious about EinveX, we would be glad to hear from you.
           </p>
         </section>
 
-        <div className="mt-12 grid gap-8 md:grid-cols-2">
+        <div className="mt-8 grid gap-5 md:grid-cols-2">
           <div className="surface-card">
-            <h2 className="text-2xl font-semibold text-slate-900">Why reach out</h2>
+            <h2
+              className="text-[20px] font-semibold tracking-tight"
+              style={{
+                color: "var(--text)",
+                fontFamily: "var(--font-space-grotesk), sans-serif",
+              }}
+            >
+              Why reach out
+            </h2>
 
-            <ul className="mt-6 space-y-4 text-slate-700">
+            <ul
+              className="mt-5 space-y-3 text-[14px] leading-7"
+              style={{ color: "var(--text-dim)" }}
+            >
               <li>Investor conversations</li>
               <li>Partnership opportunities</li>
               <li>Product feedback</li>
@@ -62,19 +83,33 @@ export default function ContactPage() {
           </div>
 
           <div className="surface-card">
-            <h2 className="text-2xl font-semibold text-slate-900">Contact details</h2>
+            <h2
+              className="text-[20px] font-semibold tracking-tight"
+              style={{
+                color: "var(--text)",
+                fontFamily: "var(--font-space-grotesk), sans-serif",
+              }}
+            >
+              Contact details
+            </h2>
 
-            <div className="mt-6 space-y-5 text-slate-700">
+            <div className="mt-5 space-y-4">
               <div>
                 <p className="section-label">Startup</p>
-                <p className="mt-1 text-base text-slate-900">EinveX</p>
+                <p
+                  className="mt-1 text-[14px]"
+                  style={{ color: "var(--text)" }}
+                >
+                  EinveX
+                </p>
               </div>
 
               <div>
                 <p className="section-label">Email</p>
                 <a
                   href="mailto:Alaeddine.bya@einvex.com"
-                  className="mt-1 inline-flex break-all text-base text-slate-900 hover:text-emerald-700"
+                  className="mt-1 inline-flex break-all text-[14px] transition"
+                  style={{ color: "#6ee7a7" }}
                 >
                   Alaeddine.bya@einvex.com
                 </a>
@@ -82,14 +117,20 @@ export default function ContactPage() {
 
               <div>
                 <p className="section-label">Focus</p>
-                <p className="mt-1 text-base text-slate-900">
+                <p
+                  className="mt-1 text-[14px]"
+                  style={{ color: "var(--text)" }}
+                >
                   Ethical investment screening
                 </p>
               </div>
 
               <div>
                 <p className="section-label">Market</p>
-                <p className="mt-1 text-base text-slate-900">
+                <p
+                  className="mt-1 text-[14px]"
+                  style={{ color: "var(--text)" }}
+                >
                   Morocco, starting with the Casablanca Stock Exchange
                 </p>
               </div>
@@ -97,24 +138,38 @@ export default function ContactPage() {
           </div>
         </div>
 
-        <div className="mt-10 surface-card">
-          <h2 className="text-2xl font-semibold text-slate-900">Meet us at GITEX</h2>
-          <p className="mt-4 leading-8 text-slate-700">
+        <div className="mt-5 surface-card">
+          <h2
+            className="text-[20px] font-semibold tracking-tight"
+            style={{
+              color: "var(--text)",
+              fontFamily: "var(--font-space-grotesk), sans-serif",
+            }}
+          >
+            Meet us at GITEX
+          </h2>
+          <p
+            className="mt-3 text-[14px] leading-7"
+            style={{ color: "var(--text-dim)" }}
+          >
             EinveX is currently building its early product experience and
             engaging with investors, partners, and early supporters ahead of
             broader platform development.
           </p>
 
-          <div className="mt-8 border-t border-slate-200/80 pt-6">
-            <p className="text-sm font-medium text-slate-500">Follow EinveX</p>
-            <div className="mt-3 flex flex-wrap items-center gap-3 text-slate-600">
+          <div
+            className="mt-6 border-t pt-5"
+            style={{ borderColor: "var(--line)" }}
+          >
+            <p className="section-label">Follow EinveX</p>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
               {socialLinks.map((link) => (
                 <a
                   key={link.label}
                   href={link.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/80 px-3 py-2 text-sm transition hover:text-slate-950"
+                  className="social-chip"
                 >
                   {link.icon}
                   <span>{link.label}</span>
@@ -123,13 +178,14 @@ export default function ContactPage() {
             </div>
           </div>
 
-          <div className="mt-8">
-            <a
+          <div className="mt-6">
+            <Link
               href="/early-access"
-              className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-emerald-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800 sm:w-auto"
+              className="btn-primary inline-flex"
+              style={{ textDecoration: "none" }}
             >
               Request Early Access
-            </a>
+            </Link>
           </div>
         </div>
       </div>

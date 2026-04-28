@@ -92,6 +92,7 @@ const companySeeds: CompanySeed[] = [
   { ticker: "MDP", name: "MED PAPER", sector: "Forestry & Paper", market: "Main Market" },
   { ticker: "MIC", name: "MICRODATA", sector: "Technology", market: "Alternative Market" },
   { ticker: "MUT", name: "MUTANDIS SCA", sector: "Food Production", market: "Main Market" },
+  { ticker: "NKL", name: "ENNAKL AUTOMOBILES SA", sector: "Distributors", market: "Main Market" },
   { ticker: "OUL", name: "OULMES", sector: "Beverages", market: "Main Market" },
   { ticker: "PRO", name: "PROMOPHARM S.A.", sector: "Pharmaceuticals", market: "Main Market" },
   { ticker: "SRM", name: "REALISATIONS MECANIQUES", sector: "Distributors", market: "Main Market" },
@@ -212,9 +213,9 @@ function buildAaoifiScreening(seed: CompanySeed): AaoifiScreening {
 function buildCompany(seed: CompanySeed): CompanyScreeningData {
   return {
     ...seed,
-    note: `${seed.name} is included in the current EinveX MVP screener for the Casablanca Stock Exchange universe.`,
+    note: `${seed.name} is included in the current EinveX screener for the Casablanca Stock Exchange universe.`,
     description: `${seed.name} is presented as a locally listed ${seed.sector.toLowerCase()} company in the current EinveX screening experience.`,
-    reasoning: `This AAOIFI-based demo view reflects the current EinveX MVP screening status for ${seed.name}.`,
+    reasoning: `This AAOIFI-based view reflects the current EinveX screening status for ${seed.name}.`,
     aaoifi: buildAaoifiScreening(seed),
   };
 }

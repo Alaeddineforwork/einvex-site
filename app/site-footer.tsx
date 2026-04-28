@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 
@@ -36,27 +38,44 @@ const socialLinks = [
 
 export default function SiteFooter() {
   return (
-    <footer className="border-t border-slate-200/80 bg-white/82 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-10 sm:px-6 md:px-12">
-        <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
-          <div className="max-w-xl">
-            <Link href="/" className="inline-flex items-center">
+    <footer style={{ background: "#0e0e0e", borderTop: "1px solid #2a2a2a" }}>
+      <div
+        style={{
+          maxWidth: "1280px",
+          margin: "0 auto",
+          padding: "2.5rem 1.5rem",
+          display: "flex",
+          flexDirection: "column",
+          gap: "2rem",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "2rem",
+          }}
+          className="md:flex-row md:items-end md:justify-between"
+        >
+          <div style={{ maxWidth: "28rem" }}>
+            <Link href="/" style={{ display: "inline-flex", alignItems: "center" }}>
               <Image
-                src="/logo/einvex-dark.svg"
+                src="/logo/260x70.png"
                 alt="EinveX"
                 width={232}
                 height={56}
-                className="h-14 w-auto"
+                style={{ height: "3.5rem", width: "auto" }}
               />
             </Link>
-            <p className="mt-3 text-sm leading-7 text-slate-600">
-              Ethical investment screening with a clean, modern research
-              experience.
+            <p style={{ marginTop: "0.75rem", fontSize: "0.875rem", lineHeight: 1.75, color: "#888888" }}>
+              Ethical investment screening with a clean, modern research experience.
             </p>
 
-            <div className="mt-5">
-              <p className="text-sm font-medium text-slate-500">Follow EinveX</p>
-              <div className="mt-3 flex items-center gap-1 text-slate-500">
+            <div style={{ marginTop: "1.25rem" }}>
+              <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "#888888" }}>
+                Follow EinveX
+              </p>
+              <div style={{ marginTop: "0.75rem", display: "flex", alignItems: "center", gap: "0.25rem", color: "#888888" }}>
                 {socialLinks.map((link) => (
                   <a
                     key={link.label}
@@ -64,7 +83,9 @@ export default function SiteFooter() {
                     target="_blank"
                     rel="noreferrer"
                     aria-label={link.label}
-                    className="rounded-full p-2 transition hover:text-slate-950"
+                    style={{ borderRadius: "9999px", padding: "0.5rem", transition: "color 0.2s", display: "inline-flex" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "#2e7d52")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "#888888")}
                   >
                     {link.icon}
                   </a>
@@ -73,12 +94,23 @@ export default function SiteFooter() {
             </div>
           </div>
 
-          <nav className="flex flex-wrap gap-x-4 gap-y-3 text-sm font-medium text-slate-600">
+          <nav
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "0.75rem 1rem",
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              color: "#888888",
+            }}
+          >
             {footerLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="transition hover:text-slate-950"
+                style={{ transition: "color 0.2s", color: "#888888", textDecoration: "none" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "#2e7d52")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "#888888")}
               >
                 {link.label}
               </Link>
@@ -86,10 +118,35 @@ export default function SiteFooter() {
           </nav>
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-slate-200/80 pt-5 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.5rem",
+            borderTop: "1px solid #2a2a2a",
+            paddingTop: "1.25rem",
+            fontSize: "0.875rem",
+            color: "#888888",
+          }}
+          className="md:flex-row md:items-center md:justify-between"
+        >
           <p>Focused on ethical investing insights for the Casablanca Stock Exchange.</p>
           <p>Built for clearer long-term research.</p>
         </div>
+
+        <p
+          style={{
+            margin: 0,
+            maxWidth: "56rem",
+            fontSize: "0.75rem",
+            lineHeight: 1.7,
+            color: "#6f6f6f",
+          }}
+        >
+          EinveX provides educational research tools only and does not provide
+          investment, legal, tax, or Sharia advisory services. Verify data
+          independently before making decisions.
+        </p>
       </div>
     </footer>
   );

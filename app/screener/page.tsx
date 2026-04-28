@@ -1,16 +1,23 @@
 import ScreenerClient from "./screener-client";
 
+export const metadata = {
+  title: "Screener — EinveX",
+  description:
+    "AAOIFI-based Sharia screener for the Casablanca Stock Exchange — search and filter every listed company by sector and compliance status.",
+};
+
 export default function ScreenerPage() {
   return (
-    <main className="page-shell">
-      <section className="page-container py-16">
-        <div className="page-hero">
+    <main className="page-shell pt-[60px]">
+      <section className="page-container py-8 md:py-10">
+        <div className="page-hero grid-fade">
           <p className="eyebrow">EinveX Screener</p>
-          <h1 className="page-title">Explore screened companies</h1>
-          <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-700">
-            This AAOIFI-based MVP helps investors review Casablanca Stock
-            Exchange companies and see whether they are compliant,
-            non-compliant, or still under review.
+          <h1 className="page-title">Explore screened companies.</h1>
+          <p className="page-intro">
+            Browse every Casablanca Stock Exchange company through the AAOIFI
+            lens — search by ticker, filter by sector, and see at a glance
+            whether each name is compliant, non-compliant, or still under
+            review.
           </p>
         </div>
       </section>

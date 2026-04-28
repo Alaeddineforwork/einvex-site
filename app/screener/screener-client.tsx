@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { SignUpButton, useUser } from "@clerk/nextjs";
 import { useMemo, useState } from "react";
 import {
   FinalStatus,
@@ -8,13 +10,15 @@ import {
   getStatusStyle,
 } from "../screening-data";
 
-type VisibleCount = "10" | "25" | "50" | "100" | "all";
+type VisibleCount = "25" | "50" | "100" | "all";
 
 export default function ScreenerClient() {
+  const { isSignedIn } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
   const [sectorFilter, setSectorFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState<"All" | FinalStatus>("All");
-  const [visibleCount, setVisibleCount] = useState<VisibleCount>("10");
+  // Show every company by default — users can dial it down with the selector.
+  const [visibleCount, setVisibleCount] = useState<VisibleCount>("all");
 
   const sectorOptions = useMemo(
     () => ["All", ...new Set(companies.map((company) => company.sector))],
@@ -54,189 +58,294 @@ export default function ScreenerClient() {
   }, [searchQuery, sectorFilter, statusFilter]);
 
   const visibleCompanies = useMemo(() => {
+    if (!isSignedIn) {
+      return filteredCompanies.slice(0, 6);
+    }
     if (visibleCount === "all") {
       return filteredCompanies;
     }
-
     return filteredCompanies.slice(0, Number(visibleCount));
-  }, [filteredCompanies, visibleCount]);
+  }, [filteredCompanies, visibleCount, isSignedIn]);
 
   return (
     <>
-      <div className="mb-8 surface-card p-5">
-        <div className="grid gap-4">
-          <input
-            type="text"
-            placeholder="Search by company, ticker, or sector..."
-            className="field-control rounded-xl"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-          />
+      {/* Filter card */}
+      <div className="surface-card mb-6 flex flex-col gap-4">
+        <input
+          type="text"
+          placeholder="Search by company, ticker, or sector…"
+          className="field-control"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+        />
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <select
-              className="field-control"
-              value={visibleCount}
-              onChange={(event) =>
-                setVisibleCount(event.target.value as VisibleCount)
-              }
-            >
-              <option value="10">Show 10</option>
-              <option value="25">Show 25</option>
-              <option value="50">Show 50</option>
-              <option value="100">Show 100</option>
-              <option value="all">Show all</option>
-            </select>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <select
+            className="field-control"
+            value={visibleCount}
+            onChange={(event) =>
+              setVisibleCount(event.target.value as VisibleCount)
+            }
+          >
+            <option value="all">Show all</option>
+            <option value="25">Show 25</option>
+            <option value="50">Show 50</option>
+            <option value="100">Show 100</option>
+          </select>
 
-            <select
-              className="field-control"
-              value={sectorFilter}
-              onChange={(event) => setSectorFilter(event.target.value)}
-            >
-              {sectorOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option === "All" ? "All sectors" : option}
-                </option>
-              ))}
-            </select>
+          <select
+            className="field-control"
+            value={sectorFilter}
+            onChange={(event) => setSectorFilter(event.target.value)}
+          >
+            {sectorOptions.map((option) => (
+              <option key={option} value={option}>
+                {option === "All" ? "All sectors" : option}
+              </option>
+            ))}
+          </select>
 
-            <select
-              className="field-control"
-              value={statusFilter}
-              onChange={(event) =>
-                setStatusFilter(event.target.value as "All" | FinalStatus)
-              }
-            >
-              <option value="All">All statuses</option>
-              <option value="Sharia-compliant">Sharia-compliant</option>
-              <option value="Not Sharia-compliant">Not Sharia-compliant</option>
-              <option value="Under review">Under review</option>
-            </select>
-          </div>
-
-          <p className="text-sm text-slate-500">
-            Showing {visibleCompanies.length} of {filteredCompanies.length}{" "}
-            {filteredCompanies.length === 1 ? "company" : "companies"}
-          </p>
+          <select
+            className="field-control"
+            value={statusFilter}
+            onChange={(event) =>
+              setStatusFilter(event.target.value as "All" | FinalStatus)
+            }
+          >
+            <option value="All">All statuses</option>
+            <option value="Sharia-compliant">Sharia-compliant</option>
+            <option value="Not Sharia-compliant">Not Sharia-compliant</option>
+            <option value="Under review">Under review</option>
+          </select>
         </div>
+
+        <p className="text-[12px]" style={{ color: "var(--text-mute)" }}>
+          Showing{" "}
+          <span className="num" style={{ color: "var(--text)" }}>
+            {visibleCompanies.length}
+          </span>{" "}
+          of{" "}
+          <span className="num" style={{ color: "var(--text)" }}>
+            {filteredCompanies.length}
+          </span>{" "}
+          {filteredCompanies.length === 1 ? "company" : "companies"}
+        </p>
       </div>
 
       {filteredCompanies.length === 0 ? (
         <div className="surface-card py-12 text-center">
-          <p className="text-lg font-medium text-slate-900">
+          <p
+            className="text-[15px] font-medium"
+            style={{ color: "var(--text)" }}
+          >
             No companies match your search and filters.
           </p>
-          <p className="mt-2 text-sm text-slate-500">
+          <p
+            className="mt-2 text-[12.5px]"
+            style={{ color: "var(--text-mute)" }}
+          >
             Try broadening your search or changing a filter.
           </p>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {visibleCompanies.map((company) => {
             const finalStatus = formatScreeningStatus(company.aaoifi.status);
             const isLocked = company.aaoifi.status === "under_review";
+            const pillCls =
+              finalStatus === "Sharia-compliant"
+                ? "pill-compliant"
+                : finalStatus === "Not Sharia-compliant"
+                  ? "pill-not-compliant"
+                  : "pill-review";
 
             return (
-              <div key={company.ticker} className="surface-card p-5 sm:p-6">
-                <div className="flex items-start justify-between gap-4">
+              <div key={company.ticker} className="surface-card flex flex-col">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
-                    <h2 className="text-lg font-semibold text-slate-950 sm:text-xl">
+                    <h2
+                      className="text-[16px] font-semibold sm:text-[17px]"
+                      style={{
+                        color: "var(--text)",
+                        fontFamily: "var(--font-space-grotesk), sans-serif",
+                        letterSpacing: "-0.01em",
+                      }}
+                    >
                       {company.name}
                     </h2>
-                    <p className="mt-1 break-all text-xs uppercase tracking-[0.18em] text-slate-500 sm:text-sm">
+                    <p
+                      className="ticker-cell mt-1"
+                      style={{ color: "var(--text-mute)" }}
+                    >
                       {company.ticker}
                     </p>
                   </div>
 
-                  {!isLocked ? (
+                  {!isLocked && (
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusStyle(
-                        finalStatus
-                      )}`}
+                      className={
+                        "inline-flex shrink-0 rounded-full border px-2.5 py-1 text-[10.5px] font-semibold " +
+                        pillCls +
+                        " " +
+                        getStatusStyle(finalStatus)
+                      }
                     >
                       {finalStatus}
                     </span>
-                  ) : null}
+                  )}
                 </div>
 
-                <div className="mt-6">
+                <div className="mt-4">
                   <p className="section-label">Sector</p>
-                  <p className="mt-1 text-base text-slate-900">{company.sector}</p>
+                  <p
+                    className="mt-1 text-[13.5px]"
+                    style={{ color: "var(--text)" }}
+                  >
+                    {company.sector}
+                  </p>
                 </div>
 
                 {isLocked ? (
-                  <div className="relative mt-5 min-h-[15.5rem] overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50/90 p-4 sm:min-h-[14rem] sm:p-5">
-                    <div className="space-y-4 blur-[3px] select-none">
+                  <div
+                    className="relative mt-4 overflow-hidden rounded-xl border p-4"
+                    style={{
+                      borderColor: "var(--line)",
+                      background: "var(--bg-elev)",
+                      minHeight: "13rem",
+                    }}
+                  >
+                    <div
+                      className="space-y-3 select-none"
+                      style={{ filter: "blur(3px)" }}
+                    >
                       <div>
                         <p className="section-label">Status</p>
                         <div className="mt-2">
-                          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-500">
-                            Under review
-                          </span>
+                          <span className="chip chip-neutral">Under review</span>
                         </div>
                       </div>
-
                       <div>
                         <p className="section-label">Source</p>
-                        <p className="mt-1 text-base text-slate-900">AAOIFI</p>
+                        <p
+                          className="mt-1 text-[13px]"
+                          style={{ color: "var(--text)" }}
+                        >
+                          AAOIFI
+                        </p>
                       </div>
-
                       <div>
                         <p className="section-label">Comment</p>
-                        <p className="mt-1 text-sm leading-6 text-slate-700">
+                        <p
+                          className="mt-1 text-[12.5px] leading-6"
+                          style={{ color: "var(--text-dim)" }}
+                        >
                           AAOIFI screening for this company is not yet available.
                         </p>
                       </div>
                     </div>
 
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/72 p-4 backdrop-blur-[2px] sm:p-5">
+                    <div
+                      className="absolute inset-0 flex items-center justify-center p-4"
+                      style={{
+                        background: "rgba(10,14,18,0.78)",
+                        backdropFilter: "blur(2px)",
+                      }}
+                    >
                       <div className="max-w-xs text-center">
-                        <p className="text-sm font-semibold text-slate-900">
-                          Join the waitlist to access upcoming screenings
+                        <p
+                          className="text-[13.5px] font-semibold"
+                          style={{ color: "var(--text)" }}
+                        >
+                          Join the waitlist for upcoming screenings
                         </p>
-                        <p className="mt-2 text-sm leading-6 text-slate-600">
+                        <p
+                          className="mt-2 text-[12.5px] leading-6"
+                          style={{ color: "var(--text-dim)" }}
+                        >
                           AAOIFI screening for this company is not yet available.
                         </p>
-                        <a
+                        <Link
                           href="/early-access"
-                          className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-800 sm:w-auto"
+                          className="btn-primary mt-3 inline-flex"
+                          style={{ textDecoration: "none" }}
                         >
                           Join Early Access
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   </div>
                 ) : (
                   <>
-                    <div className="mt-4">
+                    <div className="mt-3">
                       <p className="section-label">Source</p>
-                      <p className="mt-1 text-base text-slate-900">AAOIFI</p>
+                      <p
+                        className="mt-1 text-[13px]"
+                        style={{ color: "var(--text)" }}
+                      >
+                        AAOIFI
+                      </p>
                     </div>
-
-                    <div className="mt-4">
+                    <div className="mt-3">
                       <p className="section-label">Comment</p>
-                      <p className="mt-1 text-sm leading-6 text-slate-700">
+                      <p
+                        className="mt-1 text-[12.5px] leading-6"
+                        style={{ color: "var(--text-dim)" }}
+                      >
                         {company.aaoifi.comment}
                       </p>
                     </div>
                   </>
                 )}
 
-                <div className="mt-6">
-                  <a
-                    href={isLocked ? "/early-access" : `/companies/${company.ticker}`}
-                    className={`inline-flex min-h-11 w-full items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold transition sm:w-auto ${
+                <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <Link
+                    href={
                       isLocked
-                        ? "bg-emerald-700 text-white hover:bg-emerald-800"
-                        : "bg-slate-900 text-white hover:bg-slate-700"
-                    }`}
+                        ? "/early-access"
+                        : `/companies/${company.ticker}`
+                    }
+                    className={isLocked ? "btn-primary" : "btn-ghost"}
+                    style={{ textDecoration: "none", width: "fit-content" }}
                   >
                     {isLocked ? "Join Early Access" : "View Details"}
-                  </a>
+                  </Link>
+                  {!isLocked && (
+                    <Link
+                      href={`/marche/${company.ticker}`}
+                      className="text-[12px]"
+                      style={{
+                        color: "var(--text-mute)",
+                        textDecoration: "none",
+                      }}
+                    >
+                      Open in Market →
+                    </Link>
+                  )}
                 </div>
               </div>
             );
           })}
+          {!isSignedIn && (
+            <div
+              className="surface-card flex min-h-[260px] flex-col items-center justify-center text-center"
+              style={{
+                borderColor: "rgba(34,197,94,0.26)",
+                background: "rgba(34,197,94,0.07)",
+              }}
+            >
+              <p className="text-[14px] font-semibold" style={{ color: "var(--text)" }}>
+                Create a free account to unlock full access
+              </p>
+              <p className="mt-2 max-w-xs text-[12.5px] leading-6" style={{ color: "var(--text-dim)" }}>
+                Sign up to view the full screener universe and detailed screening pages.
+              </p>
+              <SignUpButton mode="redirect" forceRedirectUrl="/screener">
+                <button type="button" className="btn-primary mt-4">
+                  Create free account
+                </button>
+              </SignUpButton>
+            </div>
+          )}
         </div>
       )}
     </>

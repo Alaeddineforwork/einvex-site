@@ -1,238 +1,636 @@
-import Image from "next/image";
-import Link from "next/link";
+"use client";
 
-const socialLinks = [
-  {
-    href: "https://linkedin.com/company/einvex",
-    label: "LinkedIn",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
-        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6Z" />
-        <path d="M2 9h4v12H2z" />
-        <circle cx="4" cy="4" r="2" />
-      </svg>
-    ),
-  },
-  {
-    href: "https://instagram.com/einve_x",
-    label: "Instagram",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
-        <rect x="2" y="2" width="20" height="20" rx="5" />
-        <circle cx="12" cy="12" r="4.5" />
-        <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-      </svg>
-    ),
-  },
-];
+import Link from "next/link";
+import { useEffect, useRef } from "react";
 
 export default function Home() {
+  const cardsSectionRef = useRef<HTMLElement>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const sectionRefs = useRef<(HTMLElement | null)[]>([]);
+
+  const scrollToCards = () => {
+    cardsSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+          } else {
+            entry.target.classList.remove("visible");
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    cardRefs.current.forEach((card) => {
+      if (card) observer.observe(card);
+    });
+
+    const sectionObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+          } else {
+            entry.target.classList.remove("visible");
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    sectionRefs.current.forEach((s) => { if (s) sectionObserver.observe(s); });
+
+    return () => {
+      observer.disconnect();
+      sectionObserver.disconnect();
+    };
+  }, []);
+
   return (
-    <main className="min-h-screen bg-white text-slate-900">
-      <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 md:px-12 md:py-4">
-          <div className="flex items-center">
-            <Image
-              src="/logo/einvex-dark.svg"
-              alt="EinveX"
-              width={215}
-              height={52}
-              className="h-9 w-auto md:h-[52px]"
-              priority
-            />
+    <>
+      <style>{`
+        .anim-section {
+          opacity: 0;
+          transform: translateY(40px);
+          transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .anim-section.visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .anim-card {
+          opacity: 0;
+          transform: translateY(24px);
+          transition: opacity 0.55s ease, transform 0.55s ease;
+        }
+        .anim-card.visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(18px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .hero-headline {
+          opacity: 0;
+          animation: fadeUp 0.75s ease forwards;
+          animation-delay: 0s;
+        }
+        .hero-sub {
+          opacity: 0;
+          animation: fadeUp 0.75s ease forwards;
+          animation-delay: 0.3s;
+        }
+        .hero-cta {
+          opacity: 0;
+          animation: fadeUp 0.75s ease forwards;
+          animation-delay: 0.6s;
+        }
+        @media (max-width: 767px) {
+          .home-hero {
+            --hero-min-height: 78svh;
+            --hero-padding: 5.25rem 1.25rem 2.5rem;
+            --hero-padding-top: 5.25rem;
+            --hero-justify: flex-start;
+            --hero-sub-gap: 1rem;
+            --hero-cta-gap: 1.5rem;
+          }
+        }
+      `}</style>
+
+      <main style={{ background: "#0e0e0e", color: "#f5f5f5" }}>
+
+        {/* ── Section 1: Hero ── */}
+        <section
+          className="home-hero"
+          style={{
+            minHeight: "var(--hero-min-height, 100vh)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "var(--hero-justify, center)",
+            textAlign: "center",
+            padding: "var(--hero-padding, 4rem 1.5rem)",
+            paddingTop: "var(--hero-padding-top, 80px)",
+          }}
+        >
+          <h1
+            className="hero-headline"
+            style={{
+              fontSize: "clamp(2.05rem, 10vw, 5.5rem)",
+              fontWeight: 700,
+              letterSpacing: "-0.025em",
+              lineHeight: 1.08,
+              color: "#f5f5f5",
+              maxWidth: "min(820px, calc(100vw - 2rem))",
+              width: "100%",
+              overflowWrap: "break-word",
+            }}
+          >
+            Invest with Purpose
+          </h1>
+
+          <p
+            className="hero-sub"
+            style={{
+              marginTop: "var(--hero-sub-gap, 1.5rem)",
+              fontSize: "clamp(1rem, 2vw, 1.2rem)",
+              lineHeight: 1.75,
+              color: "#888888",
+              maxWidth: "min(540px, calc(100vw - 2rem))",
+              width: "100%",
+            }}
+          >
+            One platform for Sharia-compliant investment opportunities —
+            screened with rigor, built for clarity.
+          </p>
+
+          <button
+            className="hero-cta"
+            onClick={scrollToCards}
+            style={{
+              marginTop: "var(--hero-cta-gap, 2.5rem)",
+              background: "#1a5c38",
+              color: "#f5f5f5",
+              border: "none",
+              borderRadius: "9999px",
+              padding: "0.85rem 2.2rem",
+              fontSize: "0.9rem",
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "background 0.2s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#2e7d52")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "#1a5c38")}
+          >
+            Explore Opportunities
+          </button>
+        </section>
+
+        {/* ── Section 2: Cards ── */}
+        <section
+          ref={(el) => { cardsSectionRef.current = el; sectionRefs.current[0] = el; }}
+          className="anim-section"
+          style={{
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "4rem 1.5rem",
+          }}
+        >
+          <div style={{ maxWidth: "1100px", margin: "0 auto", width: "100%" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: "1.5rem",
+              }}
+            >
+
+              {/* Card 1 */}
+              <div
+                ref={(el) => { cardRefs.current[0] = el; }}
+                className="anim-card"
+                style={{
+                  background: "#1a1a1a",
+                  borderTop: "1px solid #2a2a2a",
+                  borderRight: "1px solid #2a2a2a",
+                  borderBottom: "1px solid #2a2a2a",
+                  borderLeft: "3px solid #1a5c38",
+                  borderRadius: "1.25rem",
+                  padding: "2rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  transition: "opacity 0.55s ease, transform 0.55s ease, border-color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  const el = e.currentTarget;
+                  el.style.borderTopColor = "#2e7d52";
+                  el.style.borderRightColor = "#2e7d52";
+                  el.style.borderBottomColor = "#2e7d52";
+                  el.style.borderLeftColor = "#2e7d52";
+                }}
+                onMouseLeave={(e) => {
+                  const el = e.currentTarget;
+                  el.style.borderTopColor = "#2a2a2a";
+                  el.style.borderRightColor = "#2a2a2a";
+                  el.style.borderBottomColor = "#2a2a2a";
+                  el.style.borderLeftColor = "#1a5c38";
+                }}
+              >
+                <h2 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#f5f5f5" }}>
+                  Portfolio
+                </h2>
+                <p style={{ marginTop: "0.75rem", flex: 1, fontSize: "0.9rem", lineHeight: 1.75, color: "#888888" }}>
+                  Track your investments, monitor performance, and analyze your portfolio over time.
+                </p>
+                <div style={{ marginTop: "1.75rem" }}>
+                  <Link
+                    href="/portfolio"
+                    style={{
+                      display: "inline-block",
+                      background: "#1a5c38",
+                      color: "#f5f5f5",
+                      borderRadius: "9999px",
+                      padding: "0.65rem 1.5rem",
+                      fontSize: "0.85rem",
+                      fontWeight: 600,
+                      textDecoration: "none",
+                      transition: "background 0.2s",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#2e7d52")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "#1a5c38")}
+                  >
+                    Explore Now
+                  </Link>
+                </div>
+              </div>
+
+              {/* Card 2 */}
+              <div
+                ref={(el) => { cardRefs.current[1] = el; }}
+                className="anim-card"
+                style={{
+                  background: "#1a1a1a",
+                  borderTop: "1px solid #2a2a2a",
+                  borderRight: "1px solid #2a2a2a",
+                  borderBottom: "1px solid #2a2a2a",
+                  borderLeft: "3px solid #1a5c38",
+                  borderRadius: "1.25rem",
+                  padding: "2rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  transition: "opacity 0.55s ease, transform 0.55s ease, border-color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  const el = e.currentTarget;
+                  el.style.borderTopColor = "#2e7d52";
+                  el.style.borderRightColor = "#2e7d52";
+                  el.style.borderBottomColor = "#2e7d52";
+                  el.style.borderLeftColor = "#2e7d52";
+                }}
+                onMouseLeave={(e) => {
+                  const el = e.currentTarget;
+                  el.style.borderTopColor = "#2a2a2a";
+                  el.style.borderRightColor = "#2a2a2a";
+                  el.style.borderBottomColor = "#2a2a2a";
+                  el.style.borderLeftColor = "#1a5c38";
+                }}
+              >
+                <h2 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#f5f5f5" }}>
+                  Market
+                </h2>
+                <p style={{ marginTop: "0.75rem", flex: 1, fontSize: "0.9rem", lineHeight: 1.75, color: "#888888" }}>
+                  Follow Moroccan market indices and stay updated with market movements.
+                </p>
+                <div style={{ marginTop: "1.75rem" }}>
+                  <Link
+                    href="/marche"
+                    style={{
+                      display: "inline-block",
+                      background: "#1a5c38",
+                      color: "#f5f5f5",
+                      borderRadius: "9999px",
+                      padding: "0.65rem 1.5rem",
+                      fontSize: "0.85rem",
+                      fontWeight: 600,
+                      textDecoration: "none",
+                      transition: "background 0.2s",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#2e7d52")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "#1a5c38")}
+                  >
+                    Explore Now
+                  </Link>
+                </div>
+              </div>
+
+              {/* Card 3 */}
+              <div
+                ref={(el) => { cardRefs.current[2] = el; }}
+                className="anim-card"
+                style={{
+                  background: "#1a1a1a",
+                  borderTop: "1px solid #2a2a2a",
+                  borderRight: "1px solid #2a2a2a",
+                  borderBottom: "1px solid #2a2a2a",
+                  borderLeft: "3px solid #1a5c38",
+                  borderRadius: "1.25rem",
+                  padding: "2rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  transition: "opacity 0.55s ease, transform 0.55s ease, border-color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  const el = e.currentTarget;
+                  el.style.borderTopColor = "#2e7d52";
+                  el.style.borderRightColor = "#2e7d52";
+                  el.style.borderBottomColor = "#2e7d52";
+                  el.style.borderLeftColor = "#2e7d52";
+                }}
+                onMouseLeave={(e) => {
+                  const el = e.currentTarget;
+                  el.style.borderTopColor = "#2a2a2a";
+                  el.style.borderRightColor = "#2a2a2a";
+                  el.style.borderBottomColor = "#2a2a2a";
+                  el.style.borderLeftColor = "#1a5c38";
+                }}
+              >
+                <h2 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#f5f5f5" }}>
+                  CSE Stock Screener
+                </h2>
+                <p style={{ marginTop: "0.75rem", flex: 1, fontSize: "0.9rem", lineHeight: 1.75, color: "#888888" }}>
+                  Browse Casablanca Stock Exchange stocks and check their Sharia-compliance status.
+                </p>
+                <div style={{ marginTop: "1.75rem" }}>
+                  <Link
+                    href="/screener"
+                    style={{
+                      display: "inline-block",
+                      background: "#1a5c38",
+                      color: "#f5f5f5",
+                      borderRadius: "9999px",
+                      padding: "0.65rem 1.5rem",
+                      fontSize: "0.85rem",
+                      fontWeight: 600,
+                      textDecoration: "none",
+                      transition: "background 0.2s",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#2e7d52")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "#1a5c38")}
+                  >
+                    Explore Now
+                  </Link>
+                </div>
+              </div>
+
+              {/* Card 4 */}
+              <div
+                ref={(el) => { cardRefs.current[3] = el; }}
+                className="anim-card"
+                style={{
+                  background: "#1a1a1a",
+                  border: "1px solid #2a2a2a",
+                  borderRadius: "1.25rem",
+                  padding: "2rem",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.5rem" }}>
+                  <h2 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#f5f5f5" }}>
+                    Investment Projects
+                  </h2>
+                  <span style={{ background: "rgba(217,119,6,0.15)", color: "#f59e0b", borderRadius: "9999px", padding: "0.2rem 0.65rem", fontSize: "0.72rem", fontWeight: 600 }}>
+                    Coming Soon
+                  </span>
+                </div>
+                <p style={{ marginTop: "0.75rem", flex: 1, fontSize: "0.9rem", lineHeight: 1.75, color: "#888888" }}>
+                  Curated Sharia-compliant investment deals, selected for ethical and financial integrity.
+                </p>
+                <div style={{ marginTop: "1.75rem" }}>
+                  <button disabled style={{ background: "#222222", color: "#444444", border: "none", borderRadius: "9999px", padding: "0.65rem 1.5rem", fontSize: "0.85rem", fontWeight: 600, cursor: "not-allowed" }}>
+                    Explore Now
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 5 */}
+              <div
+                ref={(el) => { cardRefs.current[4] = el; }}
+                className="anim-card"
+                style={{
+                  background: "#1a1a1a",
+                  border: "1px solid #2a2a2a",
+                  borderRadius: "1.25rem",
+                  padding: "2rem",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.5rem" }}>
+                  <h2 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#f5f5f5" }}>
+                    Real Estate
+                  </h2>
+                  <span style={{ background: "rgba(217,119,6,0.15)", color: "#f59e0b", borderRadius: "9999px", padding: "0.2rem 0.65rem", fontSize: "0.72rem", fontWeight: 600 }}>
+                    Coming Soon
+                  </span>
+                </div>
+                <p style={{ marginTop: "0.75rem", flex: 1, fontSize: "0.9rem", lineHeight: 1.75, color: "#888888" }}>
+                  Sharia-compliant real estate opportunities, built for the ethical investor.
+                </p>
+                <div style={{ marginTop: "1.75rem" }}>
+                  <button disabled style={{ background: "#222222", color: "#444444", border: "none", borderRadius: "9999px", padding: "0.65rem 1.5rem", fontSize: "0.85rem", fontWeight: 600, cursor: "not-allowed" }}>
+                    Explore Now
+                  </button>
+                </div>
+              </div>
+
+            </div>
           </div>
+        </section>
 
-          <div className="flex items-center gap-1 sm:gap-3">
-            <nav className="hidden gap-8 text-sm font-medium text-slate-600 md:flex">
-              <Link href="/about" className="hover:text-slate-900">
-                About
-              </Link>
-              <a href="#how-it-works" className="hover:text-slate-900">
-                How it works
-              </a>
-              <Link href="/contact" className="hover:text-slate-900">
-                Contact
-              </Link>
-            </nav>
+        {/* ── Section 3: Stats ── */}
+        <section
+          ref={(el) => { sectionRefs.current[1] = el; }}
+          className="anim-section"
+          style={{
+            minHeight: "100vh",
+            background: "#0e0e0e",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            padding: "4rem 1.5rem",
+          }}
+        >
+          <p style={{ fontSize: "0.8rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.2em", color: "#2e7d52", marginBottom: "3.5rem" }}>
+            By the numbers
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "5rem" }}>
+            {[
+              { value: "80+",  label: "CSE stocks tracked" },
+              { value: "3",    label: "Screening criteria" },
+              { value: "100%", label: "Independent research" },
+            ].map((stat) => (
+              <div key={stat.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem" }}>
+                <span style={{ fontSize: "5rem", fontWeight: 700, color: "#f5f5f5", lineHeight: 1 }}>
+                  {stat.value}
+                </span>
+                <span style={{ fontSize: "0.9rem", color: "#888888" }}>{stat.label}</span>
+              </div>
+            ))}
+          </div>
+        </section>
 
-            <div className="flex items-center gap-0.5 text-slate-500 sm:gap-1">
-              {socialLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={link.label}
-                  className="rounded-full p-1.5 transition hover:text-slate-900 sm:p-2"
+        {/* ── Section 4: How it works ── */}
+        <section
+          ref={(el) => { sectionRefs.current[2] = el; }}
+          className="anim-section"
+          style={{
+            minHeight: "100vh",
+            background: "#111111",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "4rem 1.5rem",
+          }}
+        >
+          <p style={{ fontSize: "0.8rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.2em", color: "#2e7d52", marginBottom: "3.5rem" }}>
+            How it works
+          </p>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+              gap: "1.5rem",
+              maxWidth: "900px",
+              width: "100%",
+            }}
+          >
+            {[
+              { step: "1", title: "Create your account", desc: "Sign up in seconds, no paperwork required." },
+              { step: "2", title: "Browse the screener",  desc: "Explore CSE stocks and their Sharia-compliance status." },
+              { step: "3", title: "Track your portfolio", desc: "Add your holdings and monitor them in one place." },
+            ].map(({ step, title, desc }) => (
+              <div key={step} style={{ position: "relative", padding: "2rem 1.5rem", overflow: "hidden", minHeight: "160px" }}>
+                <span
+                  style={{
+                    fontSize: "10rem",
+                    fontWeight: 800,
+                    color: "#1a1a1a",
+                    position: "absolute",
+                    top: "-2rem",
+                    left: "-1rem",
+                    lineHeight: 1,
+                    userSelect: "none",
+                    zIndex: 0,
+                    pointerEvents: "none",
+                    fontFamily: "monospace",
+                  }}
                 >
-                  {link.icon}
-                </a>
+                  {step}
+                </span>
+                <div style={{ position: "relative", zIndex: 1 }}>
+                  <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#f5f5f5", marginBottom: "0.75rem" }}>
+                    {title}
+                  </h3>
+                  <p style={{ fontSize: "0.9rem", lineHeight: 1.75, color: "#888888" }}>{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Section 5: Why EinveX ── */}
+        <section
+          ref={(el) => { sectionRefs.current[3] = el; }}
+          className="anim-section"
+          style={{
+            minHeight: "100vh",
+            background: "#0e0e0e",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "4rem 1.5rem",
+          }}
+        >
+          <div style={{ maxWidth: "800px", width: "100%" }}>
+            <p style={{ fontSize: "0.8rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.2em", color: "#2e7d52", marginBottom: "1rem" }}>
+              Why EinveX
+            </p>
+            <h2
+              style={{
+                fontSize: "clamp(1.8rem, 4vw, 3rem)",
+                fontWeight: 700,
+                color: "#f5f5f5",
+                letterSpacing: "-0.02em",
+                lineHeight: 1.15,
+                marginBottom: "3rem",
+              }}
+            >
+              Built for the ethical investor
+            </h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "2.5rem" }}>
+              {[
+                { title: "Independent",            desc: "No commissions, no conflicts. Just clean research." },
+                { title: "Sharia-compliant focus",  desc: "Every stock screened against clear, consistent criteria." },
+                { title: "Built for Morocco",       desc: "CSE-first, designed for the local investor." },
+                { title: "Always improving",        desc: "New stocks, new features, always free to start." },
+              ].map(({ title, desc }) => (
+                <div key={title} style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                    <span style={{ width: "8px", height: "8px", borderRadius: "9999px", background: "#2e7d52", flexShrink: 0 }} />
+                    <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "#f5f5f5" }}>{title}</h3>
+                  </div>
+                  <p style={{ fontSize: "0.9rem", lineHeight: 1.75, color: "#888888", paddingLeft: "1.4rem" }}>{desc}</p>
+                </div>
               ))}
             </div>
-
-            <a
-              href="#contact"
-              className="shrink-0 whitespace-nowrap rounded-full bg-emerald-700 px-2.5 py-2 text-[11px] font-semibold text-white transition hover:bg-emerald-800 sm:px-5 sm:py-2.5 sm:text-sm"
-            >
-              Early Access
-            </a>
           </div>
-        </div>
+        </section>
 
-        <div className="border-t border-slate-200 px-4 py-2 sm:px-6 md:hidden">
-          <nav className="flex flex-wrap items-center gap-2 text-sm font-medium text-slate-600">
-            <Link href="/about" className="rounded-full border border-slate-200 bg-white px-3 py-1.5 hover:text-slate-900">
-              About
-            </Link>
-            <a href="#how-it-works" className="rounded-full border border-slate-200 bg-white px-3 py-1.5 hover:text-slate-900">
-              How it works
-            </a>
-            <Link href="/contact" className="rounded-full border border-slate-200 bg-white px-3 py-1.5 hover:text-slate-900">
-              Contact
-            </Link>
-          </nav>
-        </div>
-      </header>
-
-      <section className="mx-auto flex min-h-[88vh] max-w-7xl flex-col justify-center px-4 py-14 sm:px-6 sm:py-16 md:px-12 md:py-20">
-        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_30rem] lg:gap-14">
-          <div className="max-w-3xl">
-            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
-              Ethical investing, reimagined
-            </p>
-            <h1 className="text-3xl font-bold leading-tight sm:text-4xl md:text-6xl">
-              Invest with confidence.
-              <br />
-              Invest ethically.
-            </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:mt-6 sm:text-lg sm:leading-8">
-              EinveX helps investors explore ethical investment opportunities,
-              starting with a screening experience for companies listed on the
-              Casablanca Stock Exchange.
-            </p>
-
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <a
-                href="/screener"
-                className="rounded-full bg-emerald-700 px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-emerald-800"
-              >
-                Explore Screener
-              </a>
-              <a
-                href="#about"
-                className="rounded-full border border-slate-300 px-6 py-3 text-center text-sm font-semibold text-slate-800 transition hover:border-slate-400"
-              >
-                Learn More
-              </a>
-            </div>
-          </div>
-
-          <div className="mx-auto w-full max-w-md sm:max-w-lg">
-            <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-50 shadow-[0_28px_70px_-40px_rgba(15,23,42,0.4)]">
-              <Image
-                src="/hero/hero-dark.png"
-                alt="EinveX platform preview"
-                width={1200}
-                height={1200}
-                className="h-auto w-full"
-                priority
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="about" className="border-t border-slate-200 bg-slate-50">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-16 md:px-12 md:py-20">
-          <div className="max-w-3xl">
-            <h2 className="text-2xl font-bold sm:text-3xl md:text-4xl">What is EinveX?</h2>
-            <p className="mt-5 text-base leading-7 text-slate-600 sm:mt-6 sm:text-lg sm:leading-8">
-              EinveX is an ethical investment platform designed to help users
-              identify investment opportunities aligned with clear screening
-              principles. Our first focus is the Moroccan market through a
-              simple and accessible screening experience.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-t border-slate-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-16 md:px-12 md:py-20">
-          <div className="max-w-3xl">
-            <h2 className="text-2xl font-bold sm:text-3xl md:text-4xl">
-              The problem we solve
-            </h2>
-            <p className="mt-5 text-base leading-7 text-slate-600 sm:mt-6 sm:text-lg sm:leading-8">
-              Many investors are interested in ethical investing, but they often
-              lack a clear and simple way to evaluate whether a company aligns
-              with their principles. EinveX aims to make that process easier,
-              more transparent, and more accessible.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section
-        id="how-it-works"
-        className="border-t border-slate-200 bg-slate-50"
-      >
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-16 md:px-12 md:py-20">
-          <h2 className="text-2xl font-bold sm:text-3xl md:text-4xl">How it works</h2>
-
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="text-sm font-semibold text-emerald-700">Step 1</div>
-              <h3 className="mt-3 text-xl font-semibold">Select a company</h3>
-              <p className="mt-3 text-slate-600">
-                Search or browse listed companies through a simple screening
-                interface.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="text-sm font-semibold text-emerald-700">Step 2</div>
-              <h3 className="mt-3 text-xl font-semibold">Review screening status</h3>
-              <p className="mt-3 text-slate-600">
-                See whether a company is compliant, non-compliant, or under
-                review based on the framework used.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="text-sm font-semibold text-emerald-700">Step 3</div>
-              <h3 className="mt-3 text-xl font-semibold">Make better decisions</h3>
-              <p className="mt-3 text-slate-600">
-                Use a clearer and more structured view to support your
-                investment research.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section
-        id="contact"
-        className="border-t border-slate-200 bg-white"
-      >
-        <div className="mx-auto max-w-4xl px-4 py-14 text-center sm:px-6 sm:py-16 md:px-12 md:py-20">
-          <h2 className="text-2xl font-bold sm:text-3xl md:text-4xl">
-            Discover ethical investing in Morocco
+        {/* ── Section 6: Final CTA ── */}
+        <section
+          ref={(el) => { sectionRefs.current[4] = el; }}
+          className="anim-section"
+          style={{
+            minHeight: "100vh",
+            background: "#111111",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            padding: "4rem 1.5rem",
+          }}
+        >
+          <h2
+            style={{
+              fontSize: "clamp(2rem, 5vw, 4rem)",
+              fontWeight: 700,
+              color: "#f5f5f5",
+              letterSpacing: "-0.025em",
+              lineHeight: 1.1,
+              maxWidth: "700px",
+            }}
+          >
+            Ready to invest with purpose?
           </h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:mt-6 sm:text-lg sm:leading-8">
-            EinveX is building a more accessible way to explore ethical
-            investment opportunities, starting with the Casablanca Stock
-            Exchange.
+          <p style={{ marginTop: "1.5rem", fontSize: "clamp(1rem, 2vw, 1.15rem)", color: "#888888", maxWidth: "440px", lineHeight: 1.75 }}>
+            Join early and get full access to the CSE screener.
           </p>
-          <div className="mt-8">
-            <a
-              href="/early-access"
-              className="inline-block rounded-full bg-emerald-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800"
-            >
-              Join Early Access
-            </a>
-          </div>
-        </div>
-      </section>
-    </main>
+          <Link
+            href="/early-access"
+            style={{
+              marginTop: "2.5rem",
+              display: "inline-block",
+              background: "#1a5c38",
+              color: "#f5f5f5",
+              borderRadius: "9999px",
+              padding: "0.85rem 2.2rem",
+              fontSize: "0.9rem",
+              fontWeight: 600,
+              textDecoration: "none",
+              transition: "background 0.2s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#2e7d52")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "#1a5c38")}
+          >
+            Get Started
+          </Link>
+        </section>
+
+      </main>
+    </>
   );
 }
