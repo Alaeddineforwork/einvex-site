@@ -10,5 +10,5 @@ export default clerkMiddleware(async (auth, req) => {
 });
 
 export const config = {
-  matcher: ["/admin(.*)"],
+  matcher: ["/admin(.*)", "/api/portfolio(.*)"],
 };

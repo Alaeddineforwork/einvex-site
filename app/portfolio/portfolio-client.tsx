@@ -42,8 +42,9 @@ function mergeQuoteFallbacks(liveQuotes: MarketQuote[]): MarketQuote[] {
 
 export default function PortfolioClient() {
   const searchParams = useSearchParams();
-  const { isSignedIn } = useUser();
+  const { isLoaded, isSignedIn, user } = useUser();
   const prefillTicker = searchParams.get("add") ?? "";
+  const remotePersistenceEnabled = Boolean(isLoaded && isSignedIn && user?.id);
 
   const {
     state,
@@ -55,12 +56,24 @@ export default function PortfolioClient() {
     deleteTrade,
     deleteDividend,
     reset,
-  } = usePortfolio();
+  } = usePortfolio({
+    clerkLoaded: isLoaded,
+    remotePersistenceEnabled,
+  });
 
   const [nisab, setNisab] = useState<number>(25000);
   const [zakatRate, setZakatRate] = useState<number>(2.5);
   const [quotes, setQuotes] = useState<MarketQuote[]>(marketQuotes);
   const highlightEntryGuide = prefillTicker.trim().length > 0;
+
+  useEffect(() => {
+    console.log("[portfolio-client] Clerk user state", {
+      isLoaded,
+      isSignedIn,
+      userId: user?.id ?? null,
+      remotePersistenceEnabled,
+    });
+  }, [isLoaded, isSignedIn, remotePersistenceEnabled, user?.id]);
 
   useEffect(() => {
     let disposed = false;
@@ -451,7 +464,9 @@ export default function PortfolioClient() {
         style={{ borderColor: "rgba(239,68,68,0.15)" }}
       >
         <p className="text-[12px]" style={{ color: "var(--text-dim)" }}>
-          Data is stored only in this browser. Clearing storage will erase it.
+          {isSignedIn
+            ? "Data is synced to your signed-in portfolio for local testing."
+            : "Data is stored only in this browser. Clearing storage will erase it."}
         </p>
         <button
           type="button"
