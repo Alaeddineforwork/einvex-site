@@ -16,8 +16,7 @@ export default function ScreenerPage() {
           <p className="page-intro">
             Browse every Casablanca Stock Exchange company through the AAOIFI
             lens — search by ticker, filter by sector, and see at a glance
-            whether each name is compliant, non-compliant, or still under
-            review.
+            whether each name is Sharia-compliant or not Sharia-compliant.
           </p>
         </div>
       </section>

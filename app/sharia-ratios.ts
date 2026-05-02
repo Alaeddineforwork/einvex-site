@@ -1,42 +1,35 @@
+import {
+  companyScreeningData,
+  type ActivityClassification,
+  type ScreeningRatioStatus,
+} from "./screening-data";
+
 /**
  * Per-company AAOIFI screening ratios.
  *
  * AAOIFI / academic Sharia screening uses four filters:
  *
- *   | Filter        | Formula                                          | Limit            |
- *   | ------------- | ------------------------------------------------ | ---------------- |
- *   | Activity      | Qualitative                                      | Halal only       |
- *   | Debt          | Interest-bearing debt / Market cap               | ≤ 30%            |
- *   | Cash          | Cash + interest-bearing securities / Market cap  | ≤ 30%            |
- *   | Non-compliant | Non-compliant revenue / Total revenue            | ≤ 5%             |
- *
- * For each ticker we either ship the actual ratios (once data has
- * been collected) or a `null` value — the UI will render
- * "Available soon" pills until then.
- *
- * To populate a ticker, drop an entry into the `ratios` map below.
- * Example:
- *
- *   ratios.ATW = {
- *     activity: "haram",
- *     debtToMarketCapPct: 78.4,
- *     cashToMarketCapPct: 12.1,
- *     nonCompliantIncomePct: 95.0,
- *     asOfDate: "2025-12-31",
- *     source: "AAOIFI screening — 2025 annual report",
- *   };
+ *   | Filter        | Formula                                          | Limit      |
+ *   | ------------- | ------------------------------------------------ | ---------- |
+ *   | Activity      | Qualitative                                      | Sharia-compliant only |
+ *   | Debt          | Interest-bearing debt / Market cap              | <= 30%     |
+ *   | Cash          | Cash + interest-bearing securities / Market cap | <= 30%     |
+ *   | Non-compliant | Non-compliant revenue / Total revenue           | <= 5%      |
  */
 
-export type ActivityVerdict = "halal" | "mixed" | "haram";
+export type ActivityVerdict = "compliant" | "mixed" | "not_compliant";
 
 export interface ShariaRatios {
   activity: ActivityVerdict | null;
   /** Interest-bearing debt / Market cap, in % (e.g. 27.4 for 27.4%) */
   debtToMarketCapPct: number | null;
+  debtStatus: ScreeningRatioStatus | null;
   /** Cash + interest-bearing securities / Market cap, in % */
   cashToMarketCapPct: number | null;
+  cashStatus: ScreeningRatioStatus | null;
   /** Non-Sharia-compliant revenue / Total revenue, in % */
   nonCompliantIncomePct: number | null;
+  nonCompliantIncomeStatus: ScreeningRatioStatus | null;
   /** Reporting date used for the ratios above (ISO YYYY-MM-DD). */
   asOfDate: string | null;
   /** Free-form source/citation for the data set. */
@@ -46,39 +39,44 @@ export interface ShariaRatios {
 export const EMPTY_RATIOS: ShariaRatios = {
   activity: null,
   debtToMarketCapPct: null,
+  debtStatus: null,
   cashToMarketCapPct: null,
+  cashStatus: null,
   nonCompliantIncomePct: null,
+  nonCompliantIncomeStatus: null,
   asOfDate: null,
   source: null,
 };
 
-/**
- * Hand-curated dataset. Add a ticker entry here as the data becomes
- * available — the UI will automatically light up the row with a
- * pass/fail chip instead of "Available soon".
- */
-export const ratios: Record<string, ShariaRatios> = {
-  // ------------------------------------------------------------------
-  // EXAMPLE — uncomment and fill in real numbers when ready.
-  //
-  // ATW: {
-  //   activity: "haram",
-  //   debtToMarketCapPct: 78.0,
-  //   cashToMarketCapPct: 14.2,
-  //   nonCompliantIncomePct: 96.0,
-  //   asOfDate: "2025-12-31",
-  //   source: "AAOIFI screening — 2025 annual report",
-  // },
-  // IAM: {
-  //   activity: "halal",
-  //   debtToMarketCapPct: 18.4,
-  //   cashToMarketCapPct: 7.6,
-  //   nonCompliantIncomePct: 1.2,
-  //   asOfDate: "2025-12-31",
-  //   source: "AAOIFI screening — 2025 annual report",
-  // },
-  // ------------------------------------------------------------------
-};
+function toPct(value: number | null): number | null {
+  return value === null ? null : value * 100;
+}
+
+function toActivityVerdict(
+  classification: ActivityClassification | null
+): ActivityVerdict | null {
+  if (classification === "Compliant") return "compliant";
+  if (classification === "Mixed") return "mixed";
+  if (classification === "Not compliant") return "not_compliant";
+  return null;
+}
+
+export const ratios: Record<string, ShariaRatios> = Object.fromEntries(
+  Object.values(companyScreeningData).map((company) => [
+    company.ticker,
+    {
+      activity: toActivityVerdict(company.aaoifi.activityClassification),
+      debtToMarketCapPct: toPct(company.aaoifi.debtRatio),
+      debtStatus: company.aaoifi.debtStatus,
+      cashToMarketCapPct: toPct(company.aaoifi.depositsRatio),
+      cashStatus: company.aaoifi.depositsStatus,
+      nonCompliantIncomePct: toPct(company.aaoifi.nonCompliantRevenueRatio),
+      nonCompliantIncomeStatus: company.aaoifi.revenueStatus,
+      asOfDate: null,
+      source: "EinveX AAOIFI 80-company screening dataset",
+    },
+  ])
+);
 
 export function getShariaRatios(ticker: string): ShariaRatios {
   return ratios[ticker.toUpperCase().trim()] ?? EMPTY_RATIOS;
@@ -94,102 +92,113 @@ export const RATIO_LIMITS = {
   nonCompliantIncomePct: 5,
 } as const;
 
-export type RowVerdict = "pass" | "fail" | "pending";
+export type RowVerdict = "pass" | "fail" | "pending" | "not_applicable";
 
 export interface RatioRow {
   key: "activity" | "debt" | "cash" | "nonCompliant";
   filter: string;
   formula: string;
   limit: string;
-  /** Display string for the company's value, or null if pending. */
+  /** Display string for the company's value, or null if not applicable. */
   value: string | null;
   /** Numeric value if available, used for chart breakdowns. */
   valuePct: number | null;
   verdict: RowVerdict;
+  statusLabel?: string;
+}
+
+function formatRatioValue(
+  value: number | null,
+  status: ScreeningRatioStatus | null
+): string | null {
+  if (value !== null) return `${value.toFixed(1)}%`;
+  if (status === "N/A" || status === "SUSPENDED") return "N/A";
+  return null;
+}
+
+function getRatioVerdict(
+  value: number | null,
+  status: ScreeningRatioStatus | null,
+  limit: number
+): RowVerdict {
+  if (status === "PASS") return "pass";
+  if (status === "FAIL") return "fail";
+  if (status === "N/A" || status === "SUSPENDED") return "not_applicable";
+  if (value === null) return "not_applicable";
+  return value <= limit ? "pass" : "fail";
+}
+
+function getRatioStatusLabel(status: ScreeningRatioStatus | null) {
+  if (status === "N/A") return "N/A";
+  if (status === "SUSPENDED") return "Suspended";
+  return undefined;
 }
 
 export function buildRatioRows(r: ShariaRatios): RatioRow[] {
-  const rows: RatioRow[] = [];
-
-  // Activity (qualitative)
-  rows.push({
-    key: "activity",
-    filter: "Activity",
-    formula: "Qualitative",
-    limit: "Halal only",
-    value:
-      r.activity === null
-        ? null
-        : r.activity === "halal"
-          ? "Halal"
-          : r.activity === "mixed"
-            ? "Mixed"
-            : "Haram",
-    valuePct: null,
-    verdict:
-      r.activity === null
-        ? "pending"
-        : r.activity === "halal"
-          ? "pass"
-          : "fail",
-  });
-
-  // Debt
-  rows.push({
-    key: "debt",
-    filter: "Debt",
-    formula: "Debt / Market cap",
-    limit: "≤ 30%",
-    value:
-      r.debtToMarketCapPct === null
-        ? null
-        : `${r.debtToMarketCapPct.toFixed(1)}%`,
-    valuePct: r.debtToMarketCapPct,
-    verdict:
-      r.debtToMarketCapPct === null
-        ? "pending"
-        : r.debtToMarketCapPct <= RATIO_LIMITS.debtToMarketCapPct
-          ? "pass"
-          : "fail",
-  });
-
-  // Cash
-  rows.push({
-    key: "cash",
-    filter: "Cash",
-    formula: "Cash / Market cap",
-    limit: "≤ 30%",
-    value:
-      r.cashToMarketCapPct === null
-        ? null
-        : `${r.cashToMarketCapPct.toFixed(1)}%`,
-    valuePct: r.cashToMarketCapPct,
-    verdict:
-      r.cashToMarketCapPct === null
-        ? "pending"
-        : r.cashToMarketCapPct <= RATIO_LIMITS.cashToMarketCapPct
-          ? "pass"
-          : "fail",
-  });
-
-  // Non-compliant income
-  rows.push({
-    key: "nonCompliant",
-    filter: "Non-compliant revenue",
-    formula: "Non-compliant income / Total revenue",
-    limit: "≤ 5%",
-    value:
-      r.nonCompliantIncomePct === null
-        ? null
-        : `${r.nonCompliantIncomePct.toFixed(1)}%`,
-    valuePct: r.nonCompliantIncomePct,
-    verdict:
-      r.nonCompliantIncomePct === null
-        ? "pending"
-        : r.nonCompliantIncomePct <= RATIO_LIMITS.nonCompliantIncomePct
-          ? "pass"
-          : "fail",
-  });
-
-  return rows;
+  return [
+    {
+      key: "activity",
+      filter: "Activity",
+      formula: "Qualitative",
+      limit: "Sharia-compliant only",
+      value:
+        r.activity === null
+          ? null
+          : r.activity === "not_compliant"
+            ? "Not Sharia-compliant"
+            : "Sharia-compliant",
+      valuePct: null,
+      verdict:
+        r.activity === null
+          ? "pending"
+          : r.activity === "not_compliant"
+            ? "fail"
+            : "pass",
+    },
+    {
+      key: "debt",
+      filter: "Debt",
+      formula: "Debt / Market cap",
+      limit: "<= 30%",
+      value: formatRatioValue(r.debtToMarketCapPct, r.debtStatus),
+      valuePct: r.debtToMarketCapPct,
+      verdict: getRatioVerdict(
+        r.debtToMarketCapPct,
+        r.debtStatus,
+        RATIO_LIMITS.debtToMarketCapPct
+      ),
+      statusLabel: getRatioStatusLabel(r.debtStatus),
+    },
+    {
+      key: "cash",
+      filter: "Cash",
+      formula: "Cash / Market cap",
+      limit: "<= 30%",
+      value: formatRatioValue(r.cashToMarketCapPct, r.cashStatus),
+      valuePct: r.cashToMarketCapPct,
+      verdict: getRatioVerdict(
+        r.cashToMarketCapPct,
+        r.cashStatus,
+        RATIO_LIMITS.cashToMarketCapPct
+      ),
+      statusLabel: getRatioStatusLabel(r.cashStatus),
+    },
+    {
+      key: "nonCompliant",
+      filter: "Non-compliant revenue",
+      formula: "Non-compliant income / Total revenue",
+      limit: "<= 5%",
+      value: formatRatioValue(
+        r.nonCompliantIncomePct,
+        r.nonCompliantIncomeStatus
+      ),
+      valuePct: r.nonCompliantIncomePct,
+      verdict: getRatioVerdict(
+        r.nonCompliantIncomePct,
+        r.nonCompliantIncomeStatus,
+        RATIO_LIMITS.nonCompliantIncomePct
+      ),
+      statusLabel: getRatioStatusLabel(r.nonCompliantIncomeStatus),
+    },
+  ];
 }

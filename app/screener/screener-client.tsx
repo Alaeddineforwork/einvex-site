@@ -45,16 +45,7 @@ export default function ScreenerClient() {
 
         return matchesSearch && matchesSector && matchesStatus;
       })
-      .sort((left, right) => {
-        const leftIsAvailable = left.aaoifi.status !== "under_review";
-        const rightIsAvailable = right.aaoifi.status !== "under_review";
-
-        if (leftIsAvailable !== rightIsAvailable) {
-          return leftIsAvailable ? -1 : 1;
-        }
-
-        return left.name.localeCompare(right.name);
-      });
+      .sort((left, right) => left.name.localeCompare(right.name));
   }, [searchQuery, sectorFilter, statusFilter]);
 
   const visibleCompanies = useMemo(() => {
@@ -115,7 +106,6 @@ export default function ScreenerClient() {
             <option value="All">All statuses</option>
             <option value="Sharia-compliant">Sharia-compliant</option>
             <option value="Not Sharia-compliant">Not Sharia-compliant</option>
-            <option value="Under review">Under review</option>
           </select>
         </div>
 
@@ -151,13 +141,10 @@ export default function ScreenerClient() {
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {visibleCompanies.map((company) => {
             const finalStatus = formatScreeningStatus(company.aaoifi.status);
-            const isLocked = company.aaoifi.status === "under_review";
             const pillCls =
               finalStatus === "Sharia-compliant"
                 ? "pill-compliant"
-                : finalStatus === "Not Sharia-compliant"
-                  ? "pill-not-compliant"
-                  : "pill-review";
+                : "pill-not-compliant";
 
             return (
               <div key={company.ticker} className="surface-card flex flex-col">
@@ -181,18 +168,16 @@ export default function ScreenerClient() {
                     </p>
                   </div>
 
-                  {!isLocked && (
-                    <span
-                      className={
-                        "inline-flex shrink-0 rounded-full border px-2.5 py-1 text-[10.5px] font-semibold " +
-                        pillCls +
-                        " " +
-                        getStatusStyle(finalStatus)
-                      }
-                    >
-                      {finalStatus}
-                    </span>
-                  )}
+                  <span
+                    className={
+                      "inline-flex shrink-0 rounded-full border px-2.5 py-1 text-[10.5px] font-semibold " +
+                      pillCls +
+                      " " +
+                      getStatusStyle(finalStatus)
+                    }
+                  >
+                    {finalStatus}
+                  </span>
                 </div>
 
                 <div className="mt-4">
@@ -205,122 +190,43 @@ export default function ScreenerClient() {
                   </p>
                 </div>
 
-                {isLocked ? (
-                  <div
-                    className="relative mt-4 overflow-hidden rounded-xl border p-4"
-                    style={{
-                      borderColor: "var(--line)",
-                      background: "var(--bg-elev)",
-                      minHeight: "13rem",
-                    }}
+                <div className="mt-3">
+                  <p className="section-label">Source</p>
+                  <p
+                    className="mt-1 text-[13px]"
+                    style={{ color: "var(--text)" }}
                   >
-                    <div
-                      className="space-y-3 select-none"
-                      style={{ filter: "blur(3px)" }}
-                    >
-                      <div>
-                        <p className="section-label">Status</p>
-                        <div className="mt-2">
-                          <span className="chip chip-neutral">Under review</span>
-                        </div>
-                      </div>
-                      <div>
-                        <p className="section-label">Source</p>
-                        <p
-                          className="mt-1 text-[13px]"
-                          style={{ color: "var(--text)" }}
-                        >
-                          AAOIFI
-                        </p>
-                      </div>
-                      <div>
-                        <p className="section-label">Comment</p>
-                        <p
-                          className="mt-1 text-[12.5px] leading-6"
-                          style={{ color: "var(--text-dim)" }}
-                        >
-                          AAOIFI screening for this company is not yet available.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div
-                      className="absolute inset-0 flex items-center justify-center p-4"
-                      style={{
-                        background: "rgba(10,14,18,0.78)",
-                        backdropFilter: "blur(2px)",
-                      }}
-                    >
-                      <div className="max-w-xs text-center">
-                        <p
-                          className="text-[13.5px] font-semibold"
-                          style={{ color: "var(--text)" }}
-                        >
-                          Join the waitlist for upcoming screenings
-                        </p>
-                        <p
-                          className="mt-2 text-[12.5px] leading-6"
-                          style={{ color: "var(--text-dim)" }}
-                        >
-                          AAOIFI screening for this company is not yet available.
-                        </p>
-                        <Link
-                          href="/early-access"
-                          className="btn-primary mt-3 inline-flex"
-                          style={{ textDecoration: "none" }}
-                        >
-                          Join Early Access
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="mt-3">
-                      <p className="section-label">Source</p>
-                      <p
-                        className="mt-1 text-[13px]"
-                        style={{ color: "var(--text)" }}
-                      >
-                        AAOIFI
-                      </p>
-                    </div>
-                    <div className="mt-3">
-                      <p className="section-label">Comment</p>
-                      <p
-                        className="mt-1 text-[12.5px] leading-6"
-                        style={{ color: "var(--text-dim)" }}
-                      >
-                        {company.aaoifi.comment}
-                      </p>
-                    </div>
-                  </>
-                )}
+                    AAOIFI
+                  </p>
+                </div>
+                <div className="mt-3">
+                  <p className="section-label">Comment</p>
+                  <p
+                    className="mt-1 text-[12.5px] leading-6"
+                    style={{ color: "var(--text-dim)" }}
+                  >
+                    {company.aaoifi.comment}
+                  </p>
+                </div>
 
                 <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center">
                   <Link
-                    href={
-                      isLocked
-                        ? "/early-access"
-                        : `/companies/${company.ticker}`
-                    }
-                    className={isLocked ? "btn-primary" : "btn-ghost"}
+                    href={`/companies/${company.ticker}`}
+                    className="btn-ghost"
                     style={{ textDecoration: "none", width: "fit-content" }}
                   >
-                    {isLocked ? "Join Early Access" : "View Details"}
+                    View Details
                   </Link>
-                  {!isLocked && (
-                    <Link
-                      href={`/marche/${company.ticker}`}
-                      className="text-[12px]"
-                      style={{
-                        color: "var(--text-mute)",
-                        textDecoration: "none",
-                      }}
-                    >
-                      Open in Market →
-                    </Link>
-                  )}
+                  <Link
+                    href={`/marche/${company.ticker}`}
+                    className="text-[12px]"
+                    style={{
+                      color: "var(--text-mute)",
+                      textDecoration: "none",
+                    }}
+                  >
+                    Open in Market →
+                  </Link>
                 </div>
               </div>
             );

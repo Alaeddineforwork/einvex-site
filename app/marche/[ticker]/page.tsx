@@ -68,7 +68,7 @@ export default async function StockDetailPage(props: {
   params: Promise<{ ticker: string }>;
 }) {
   const { ticker: rawTicker } = await props.params;
-  const ticker = rawTicker.toUpperCase();
+  const ticker = rawTicker.trim().toUpperCase();
   const company = getCompany(ticker);
   const fallbackQuote = getQuote(ticker);
   const feed = await getMarketFeed();
