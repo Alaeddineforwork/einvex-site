@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const STORAGE_KEY = "einvex_portfolio_v1";
 export const FIXED_BROKER_COMMISSION_RATE = 0.01;
@@ -83,6 +83,84 @@ function saveState(state: PortfolioState) {
   } catch {
     // ignore
   }
+}
+
+function normalizeState(state: Partial<PortfolioState>): PortfolioState {
+  return {
+    holdings: state.holdings ?? [],
+    trades: state.trades ?? [],
+    dividends: state.dividends ?? [],
+    reinvestmentPot: state.reinvestmentPot ?? 0,
+    externalCashInvested: state.externalCashInvested ?? 0,
+  };
+}
+
+function isEmptyState(state: PortfolioState): boolean {
+  return (
+    state.holdings.length === 0 &&
+    state.trades.length === 0 &&
+    state.dividends.length === 0 &&
+    state.reinvestmentPot === 0 &&
+    state.externalCashInvested === 0
+  );
+}
+
+async function loadRemoteState(): Promise<PortfolioState | null> {
+  console.log("[portfolio-store] GET /api/portfolio start");
+  const response = await fetch("/api/portfolio", {
+    cache: "no-store",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    console.error("[portfolio-store] GET /api/portfolio failed", {
+      status: response.status,
+      statusText: response.statusText,
+    });
+    throw new Error("Portfolio load failed.");
+  }
+  const body = (await response.json()) as { portfolio?: Partial<PortfolioState> | null };
+  console.log("[portfolio-store] GET /api/portfolio succeeded", {
+    hasPortfolio: Boolean(body.portfolio),
+  });
+  return body.portfolio ? normalizeState(body.portfolio) : null;
+}
+
+async function saveRemoteState(state: PortfolioState): Promise<void> {
+  console.log("[portfolio-store] PUT /api/portfolio start", {
+    trades: state.trades.length,
+    holdings: state.holdings.length,
+    dividends: state.dividends.length,
+  });
+  const response = await fetch("/api/portfolio", {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ portfolio: state }),
+  });
+  if (!response.ok) {
+    console.error("[portfolio-store] PUT /api/portfolio failed", {
+      status: response.status,
+      statusText: response.statusText,
+    });
+    throw new Error("Portfolio save failed.");
+  }
+  console.log("[portfolio-store] PUT /api/portfolio succeeded");
+}
+
+async function deleteRemoteState(): Promise<void> {
+  console.log("[portfolio-store] DELETE /api/portfolio start");
+  const response = await fetch("/api/portfolio", {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    console.error("[portfolio-store] DELETE /api/portfolio failed", {
+      status: response.status,
+      statusText: response.statusText,
+    });
+    throw new Error("Portfolio delete failed.");
+  }
+  console.log("[portfolio-store] DELETE /api/portfolio succeeded");
 }
 
 function newId(): string {
@@ -224,21 +302,110 @@ export function rebuildPortfolioFromTrades(
   };
 }
 
-export function usePortfolio() {
+export function usePortfolio({
+  clerkLoaded = false,
+  remotePersistenceEnabled = false,
+}: {
+  clerkLoaded?: boolean;
+  remotePersistenceEnabled?: boolean;
+} = {}) {
   const [state, setState] = useState<PortfolioState>(emptyPortfolio);
   const [hydrated, setHydrated] = useState(false);
+  const lastSyncedRemote = useRef<string | null>(null);
+  const remoteHydrating = useRef(false);
 
   useEffect(() => {
-    // Hydration from localStorage is the canonical use-case for setState
-    // inside an effect. We can't read storage on the server.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setState(loadState());
-    setHydrated(true);
-  }, []);
+    if (!clerkLoaded) return;
+
+    let disposed = false;
+
+    async function hydrate() {
+      console.log("[portfolio-store] hydrate start", {
+        clerkLoaded,
+        remotePersistenceEnabled,
+      });
+      setHydrated(false);
+      const localState = loadState();
+
+      if (!remotePersistenceEnabled) {
+        remoteHydrating.current = false;
+        console.log("[portfolio-store] using localStorage; remote persistence disabled");
+        lastSyncedRemote.current = null;
+        if (!disposed) {
+          // Hydration from localStorage is the canonical use-case for setState
+          // inside an effect. We can't read storage on the server.
+          setState(localState);
+          setHydrated(true);
+        }
+        return;
+      }
+
+      try {
+        remoteHydrating.current = true;
+        const remoteState = await loadRemoteState();
+        const nextState = remoteState ?? localState;
+        const serialized = JSON.stringify(nextState);
+
+        if (!remoteState && !isEmptyState(localState)) {
+          console.log("[portfolio-store] importing localStorage portfolio to Supabase");
+          await saveRemoteState(localState);
+        }
+
+        lastSyncedRemote.current = serialized;
+        if (!disposed) {
+          setState(nextState);
+          setHydrated(true);
+        }
+      } catch (error) {
+        console.error("[portfolio-store] hydrate remote flow failed", error);
+        lastSyncedRemote.current = null;
+        if (!disposed) {
+          // Keep the app usable if the local test database is unavailable.
+          setState(localState);
+          setHydrated(true);
+        }
+      } finally {
+        remoteHydrating.current = false;
+      }
+    }
+
+    hydrate();
+
+    return () => {
+      disposed = true;
+    };
+  }, [clerkLoaded, remotePersistenceEnabled]);
 
   useEffect(() => {
-    if (hydrated) saveState(state);
-  }, [state, hydrated]);
+    if (!hydrated || !clerkLoaded) {
+      console.log("[portfolio-store] skip persistence", { hydrated, clerkLoaded });
+      return;
+    }
+
+    if (!remotePersistenceEnabled) {
+      console.log("[portfolio-store] save localStorage; remote persistence disabled");
+      saveState(state);
+      return;
+    }
+
+    if (remoteHydrating.current) {
+      console.log("[portfolio-store] skip remote save; remote hydration in progress");
+      return;
+    }
+
+    const serialized = JSON.stringify(state);
+    if (lastSyncedRemote.current === serialized) {
+      console.log("[portfolio-store] skip remote save; state already synced");
+      return;
+    }
+    lastSyncedRemote.current = serialized;
+
+    const persist = isEmptyState(state) ? deleteRemoteState() : saveRemoteState(state);
+    persist.catch((error) => {
+      console.error("[portfolio-store] remote persistence failed", error);
+      // API errors are intentionally non-fatal for local testing.
+    });
+  }, [state, hydrated, clerkLoaded, remotePersistenceEnabled]);
 
   const buy = useCallback(
     (input: {
