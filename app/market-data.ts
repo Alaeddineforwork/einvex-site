@@ -72,11 +72,11 @@ export const quotesByTicker: Record<string, MarketQuote> = Object.fromEntries(
 );
 
 export function getQuote(ticker: string): MarketQuote | undefined {
-  return quotesByTicker[ticker];
+  return quotesByTicker[ticker.trim().toUpperCase()];
 }
 
 export function getCompany(ticker: string): CompanyScreeningData | undefined {
-  return companyScreeningData[ticker];
+  return companyScreeningData[ticker.trim().toUpperCase()];
 }
 
 export function formatMad(value: number): string {

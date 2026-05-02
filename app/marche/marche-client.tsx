@@ -22,7 +22,6 @@ const STATUS_TABS: Array<"All" | FinalStatus> = [
   "All",
   "Sharia-compliant",
   "Not Sharia-compliant",
-  "Under review",
 ];
 
 type QuoteFeedResponse = {
@@ -163,10 +162,8 @@ export default function MarcheClient() {
   const notCompliantCount = quotes.filter(
     (q) => q.shariaStatus === "Not Sharia-compliant"
   ).length;
-  const underReviewCount = quotes.filter(
-    (q) => q.shariaStatus === "Under review"
-  ).length;
-
+  const compliantPct = formatDecimalPct(compliantCount, quotes.length);
+  const notCompliantPct = formatDecimalPct(notCompliantCount, quotes.length);
   return (
     <div className="flex flex-col gap-5">
       <TradingViewMarketOverview indices={indices} />
@@ -178,13 +175,13 @@ export default function MarcheClient() {
           label="Sharia-compliant"
           value={formatNumber(compliantCount, 0)}
           tone="up"
-          sub={`${Math.round((compliantCount / quotes.length) * 100)}% of universe`}
+          sub={`${compliantPct} of universe`}
         />
         <SummaryStat
-          label="Not / Review"
-          value={formatNumber(notCompliantCount + underReviewCount, 0)}
+          label="Not Sharia-compliant"
+          value={formatNumber(notCompliantCount, 0)}
           tone="down"
-          sub={`${notCompliantCount} not · ${underReviewCount} review`}
+          sub={`${notCompliantPct} of universe`}
         />
       </div>
 
@@ -376,6 +373,11 @@ export default function MarcheClient() {
       </div>
     </div>
   );
+}
+
+function formatDecimalPct(count: number, total: number): string {
+  if (total <= 0) return "0,0%";
+  return `${((count / total) * 100).toFixed(1).replace(".", ",")}%`;
 }
 
 /* -------------------- Sub-components -------------------- */
@@ -666,9 +668,7 @@ function Row({ quote }: { quote: MarketQuote }) {
   const pillCls =
     quote.shariaStatus === "Sharia-compliant"
       ? "pill-compliant"
-      : quote.shariaStatus === "Not Sharia-compliant"
-      ? "pill-not-compliant"
-      : "pill-review";
+      : "pill-not-compliant";
 
   return (
     <tr>

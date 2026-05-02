@@ -278,7 +278,8 @@ export function ShariaDonut({
   underReview: number;
 }) {
   const ref = useRef<HTMLCanvasElement | null>(null);
-  const total = compliant + notCompliant + underReview;
+  const displayedNotCompliant = notCompliant + underReview;
+  const total = compliant + displayedNotCompliant;
 
   useEffect(() => {
     if (!ref.current || total === 0) return;
@@ -294,11 +295,11 @@ export function ShariaDonut({
       chart = new Chart(ctx, {
         type: "doughnut",
         data: {
-          labels: ["Compliant", "Not compliant", "Under review"],
+          labels: ["Compliant", "Not compliant"],
           datasets: [
             {
-              data: [compliant, notCompliant, underReview],
-              backgroundColor: ["#22c55e", "#ef4444", "#9ba3ad"],
+              data: [compliant, displayedNotCompliant],
+              backgroundColor: ["#22c55e", "#ef4444"],
               borderColor: "#0d1218",
               borderWidth: 2,
               hoverOffset: 6,
@@ -313,7 +314,7 @@ export function ShariaDonut({
       disposed = true;
       if (chart) chart.destroy();
     };
-  }, [compliant, notCompliant, underReview, total]);
+  }, [compliant, displayedNotCompliant, total]);
 
   if (total === 0) return <EmptyDonut />;
 

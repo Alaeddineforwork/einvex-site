@@ -248,10 +248,9 @@ export default function StockDetailClient(props: StockDetailProps) {
               className="mt-1 text-[12.5px] leading-6"
               style={{ color: "var(--text-mute)" }}
             >
-              Each row applies one of the four AAOIFI filters. Rows marked
-              <em> Available soon </em>
-              are awaiting source filings — the pass / fail chip will
-              light up automatically once data is loaded.
+              Each row applies one of the four AAOIFI filters. Rows show
+              pass/fail where a ratio applies, or N/A when the filter is not
+              decisive for the current verdict.
             </p>
           </div>
           {ratiosMeta.asOfDate && (
@@ -337,15 +336,19 @@ function RatioRowView({ row }: { row: RatioRow }) {
   const statusChip =
     row.verdict === "pending"
       ? "chip chip-neutral"
+      : row.verdict === "not_applicable"
+        ? "chip chip-neutral"
       : row.verdict === "pass"
         ? "chip chip-up"
         : "chip chip-down";
   const statusLabel =
     row.verdict === "pending"
-      ? "Available soon"
+      ? "N/A"
+      : row.statusLabel
+        ? row.statusLabel
       : row.verdict === "pass"
-        ? "✓ Pass"
-        : "✗ Fail";
+        ? "Pass"
+        : "Fail";
   return (
     <tr>
       <td className="text-[13px]" style={{ color: "var(--text)" }}>
@@ -363,7 +366,7 @@ function RatioRowView({ row }: { row: RatioRow }) {
             className="text-[11.5px] italic"
             style={{ color: "var(--text-mute)" }}
           >
-            Available soon…
+            N/A
           </span>
         ) : (
           row.value
@@ -400,5 +403,5 @@ function KPI(props: {
 function shariaPillClass(s: FinalStatus) {
   if (s === "Sharia-compliant") return "pill-compliant";
   if (s === "Not Sharia-compliant") return "pill-not-compliant";
-  return "pill-review";
+  return "pill-not-compliant";
 }
