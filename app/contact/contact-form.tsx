@@ -33,6 +33,22 @@ const reasons: ContactReason[] = [
   "Other",
 ];
 
+function trackLead(reason: ContactReason) {
+  const gtag = (window as Window & {
+    gtag?: (
+      command: "event",
+      eventName: string,
+      params: Record<string, string>
+    ) => void;
+  }).gtag;
+
+  gtag?.("event", "generate_lead", {
+    form_name: "contact",
+    lead_source: "contact_page",
+    contact_reason: reason,
+  });
+}
+
 export default function ContactForm() {
   const [formValues, setFormValues] = useState<FormValues>(initialValues);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,6 +90,7 @@ export default function ContactForm() {
       setSuccessMessage(
         result.message || "Thanks, your message has been received."
       );
+      trackLead(formValues.reason);
       setFormValues(initialValues);
     } catch (error) {
       setErrorMessage(
