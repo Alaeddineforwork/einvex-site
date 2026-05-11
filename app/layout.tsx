@@ -1,5 +1,4 @@
 import { ClerkProvider } from "@clerk/nextjs";
-import { GoogleAnalytics } from "@next/third-parties/google";
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
@@ -24,7 +23,6 @@ const jetbrains = JetBrains_Mono({
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -110,7 +108,6 @@ export default function RootLayout({
           <OnboardingModal />
           <SiteFooter />
         </body>
-        {gaMeasurementId ? <GoogleAnalytics gaId={gaMeasurementId} /> : null}
       </html>
     </ClerkProvider>
   );
