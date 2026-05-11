@@ -1,4 +1,4 @@
-import Link from "next/link";
+import ContactForm from "./contact-form";
 
 const socialLinks = [
   {
@@ -38,9 +38,9 @@ const socialLinks = [
 ];
 
 export const metadata = {
-  title: "Contact — EinveX",
+  title: "Contact - EinveX",
   description:
-    "Get in touch with the EinveX team — partnership, investor, media, and early-access conversations welcome.",
+    "Get in touch with the EinveX team for questions, feedback, partnerships, and investor conversations.",
 };
 
 export default function ContactPage() {
@@ -53,12 +53,13 @@ export default function ContactPage() {
             Let&apos;s connect around ethical investing.
           </h1>
           <p className="page-intro">
-            Whether you are an investor, potential partner, early user, or
-            simply curious about EinveX, we would be glad to hear from you.
+            Questions, feedback, partnership requests, and investor interest
+            are welcome. Tell us what you are working on and the team will
+            follow up.
           </p>
         </section>
 
-        <div className="mt-8 grid gap-5 md:grid-cols-2">
+        <div className="mt-8 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="surface-card">
             <h2
               className="text-[20px] font-semibold tracking-tight"
@@ -67,125 +68,116 @@ export default function ContactPage() {
                 fontFamily: "var(--font-space-grotesk), sans-serif",
               }}
             >
-              Why reach out
+              Send us a message
             </h2>
-
-            <ul
-              className="mt-5 space-y-3 text-[14px] leading-7"
+            <p
+              className="mt-3 text-[14px] leading-7"
               style={{ color: "var(--text-dim)" }}
             >
-              <li>Investor conversations</li>
-              <li>Partnership opportunities</li>
-              <li>Product feedback</li>
-              <li>Early access interest</li>
-              <li>Media or event discussions</li>
-            </ul>
+              Use this form for product questions, partnership ideas,
+              investor conversations, media requests, or feedback on the
+              EinveX experience.
+            </p>
+
+            <ContactForm />
           </div>
 
-          <div className="surface-card">
-            <h2
-              className="text-[20px] font-semibold tracking-tight"
-              style={{
-                color: "var(--text)",
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-              }}
-            >
-              Contact details
-            </h2>
+          <div className="flex flex-col gap-5">
+            <div className="surface-card">
+              <h2
+                className="text-[20px] font-semibold tracking-tight"
+                style={{
+                  color: "var(--text)",
+                  fontFamily: "var(--font-space-grotesk), sans-serif",
+                }}
+              >
+                Contact details
+              </h2>
 
-            <div className="mt-5 space-y-4">
-              <div>
-                <p className="section-label">Startup</p>
-                <p
-                  className="mt-1 text-[14px]"
-                  style={{ color: "var(--text)" }}
-                >
-                  EinveX
-                </p>
-              </div>
+              <div className="mt-5 space-y-4">
+                <div>
+                  <p className="section-label">Startup</p>
+                  <p
+                    className="mt-1 text-[14px]"
+                    style={{ color: "var(--text)" }}
+                  >
+                    EinveX
+                  </p>
+                </div>
 
-              <div>
-                <p className="section-label">Email</p>
-                <a
-                  href="mailto:Alaeddine.bya@einvex.com"
-                  className="mt-1 inline-flex break-all text-[14px] transition"
-                  style={{ color: "#6ee7a7" }}
-                >
-                  Alaeddine.bya@einvex.com
-                </a>
-              </div>
+                <div>
+                  <p className="section-label">Email</p>
+                  <a
+                    href="mailto:Alaeddine.bya@einvex.com"
+                    className="mt-1 inline-flex break-all text-[14px] transition"
+                    style={{ color: "#6ee7a7" }}
+                  >
+                    Alaeddine.bya@einvex.com
+                  </a>
+                </div>
 
-              <div>
-                <p className="section-label">Focus</p>
-                <p
-                  className="mt-1 text-[14px]"
-                  style={{ color: "var(--text)" }}
-                >
-                  Ethical investment screening
-                </p>
-              </div>
+                <div>
+                  <p className="section-label">Focus</p>
+                  <p
+                    className="mt-1 text-[14px]"
+                    style={{ color: "var(--text)" }}
+                  >
+                    Ethical investment screening
+                  </p>
+                </div>
 
-              <div>
-                <p className="section-label">Market</p>
-                <p
-                  className="mt-1 text-[14px]"
-                  style={{ color: "var(--text)" }}
-                >
-                  Morocco, starting with the Casablanca Stock Exchange
-                </p>
+                <div>
+                  <p className="section-label">Market</p>
+                  <p
+                    className="mt-1 text-[14px]"
+                    style={{ color: "var(--text)" }}
+                  >
+                    Morocco, starting with the Casablanca Stock Exchange
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div className="mt-5 surface-card">
-          <h2
-            className="text-[20px] font-semibold tracking-tight"
-            style={{
-              color: "var(--text)",
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-            }}
-          >
-            Meet us at GITEX
-          </h2>
-          <p
-            className="mt-3 text-[14px] leading-7"
-            style={{ color: "var(--text-dim)" }}
-          >
-            EinveX is currently building its early product experience and
-            engaging with investors, partners, and early supporters ahead of
-            broader platform development.
-          </p>
+            <div className="surface-card">
+              <h2
+                className="text-[20px] font-semibold tracking-tight"
+                style={{
+                  color: "var(--text)",
+                  fontFamily: "var(--font-space-grotesk), sans-serif",
+                }}
+              >
+                Common reasons to contact us
+              </h2>
 
-          <div
-            className="mt-6 border-t pt-5"
-            style={{ borderColor: "var(--line)" }}
-          >
-            <p className="section-label">Follow EinveX</p>
-            <div className="mt-3 flex flex-wrap items-center gap-3">
-              {socialLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="social-chip"
-                >
-                  {link.icon}
-                  <span>{link.label}</span>
-                </a>
-              ))}
+              <ul
+                className="mt-5 space-y-3 text-[14px] leading-7"
+                style={{ color: "var(--text-dim)" }}
+              >
+                <li>Questions about EinveX tools and coverage</li>
+                <li>Partnership opportunities</li>
+                <li>Investor conversations</li>
+                <li>Product feedback</li>
+                <li>Media or event discussions</li>
+              </ul>
             </div>
-          </div>
 
-          <div className="mt-6">
-            <Link
-              href="/early-access"
-              className="btn-primary inline-flex"
-              style={{ textDecoration: "none" }}
-            >
-              Request Early Access
-            </Link>
+            <div className="surface-card">
+              <p className="section-label">Follow EinveX</p>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                {socialLinks.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="social-chip"
+                  >
+                    {link.icon}
+                    <span>{link.label}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -8,7 +8,6 @@ const footerLinks = [
   { href: "/screener", label: "Screener" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
-  { href: "/early-access", label: "Early Access" },
 ];
 
 const socialLinks = [

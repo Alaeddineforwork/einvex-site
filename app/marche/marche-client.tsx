@@ -175,13 +175,13 @@ export default function MarcheClient() {
           label="Sharia-compliant"
           value={formatNumber(compliantCount, 0)}
           tone="up"
-          sub={`${compliantPct} of universe`}
+          sub={`${compliantPct} of CSE-listed companies`}
         />
         <SummaryStat
           label="Not Sharia-compliant"
           value={formatNumber(notCompliantCount, 0)}
           tone="down"
-          sub={`${notCompliantPct} of universe`}
+          sub={`${notCompliantPct} of CSE-listed companies`}
         />
       </div>
 

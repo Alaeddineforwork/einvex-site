@@ -22,7 +22,6 @@ const mobileLinks = [
   { href: "/blog", label: "News" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
-  { href: "/early-access", label: "Early Access" },
 ];
 
 const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? "")

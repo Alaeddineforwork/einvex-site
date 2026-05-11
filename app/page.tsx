@@ -607,10 +607,10 @@ export default function Home() {
             Ready to invest with purpose?
           </h2>
           <p style={{ marginTop: "1.5rem", fontSize: "clamp(1rem, 2vw, 1.15rem)", color: "#888888", maxWidth: "440px", lineHeight: 1.75 }}>
-            Join early and get full access to the CSE screener.
+            Create an account and start exploring the CSE screener.
           </p>
           <Link
-            href="/early-access"
+            href="/sign-up"
             style={{
               marginTop: "2.5rem",
               display: "inline-block",
