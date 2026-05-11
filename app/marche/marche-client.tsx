@@ -17,6 +17,9 @@ import {
 
 type SortKey = "ticker" | "name" | "sector" | "price" | "changePct" | "volume";
 type SortDir = "asc" | "desc";
+type QuoteWithSource = MarketQuote & {
+  quoteSource?: "tradingview" | "mock";
+};
 
 const STATUS_TABS: Array<"All" | FinalStatus> = [
   "All",
@@ -25,7 +28,7 @@ const STATUS_TABS: Array<"All" | FinalStatus> = [
 ];
 
 type QuoteFeedResponse = {
-  quotes?: MarketQuote[];
+  quotes?: QuoteWithSource[];
   indices?: MarketIndexQuote[];
 };
 
@@ -38,7 +41,16 @@ type MarketIndexQuote = {
   quoteSource: "tradingview";
 };
 
-function mergeQuoteFallbacks(liveQuotes: MarketQuote[]): MarketQuote[] {
+type EvxBasket = {
+  title: string;
+  count: number;
+  validCount: number;
+  averagePrice: number | null;
+  averageChangePct: number | null;
+  constituents: QuoteWithSource[];
+};
+
+function mergeQuoteFallbacks(liveQuotes: QuoteWithSource[]): QuoteWithSource[] {
   const liveByTicker = new Map(
     liveQuotes.map((quote) => [quote.ticker.toUpperCase(), quote])
   );
@@ -50,7 +62,7 @@ function mergeQuoteFallbacks(liveQuotes: MarketQuote[]): MarketQuote[] {
 }
 
 export default function MarcheClient() {
-  const [quotes, setQuotes] = useState<MarketQuote[]>(marketQuotes);
+  const [quotes, setQuotes] = useState<QuoteWithSource[]>(marketQuotes);
   const [indices, setIndices] = useState<MarketIndexQuote[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [sectorFilter, setSectorFilter] = useState("All");
@@ -106,6 +118,14 @@ export default function MarcheClient() {
       .slice(0, 3);
     return { topGainers: gainers, topLosers: losers, mostActive: active };
   }, [quotes]);
+
+  const evxBaskets = useMemo(
+    () => [
+      buildEvxBasket("EVX Sharia Index", "Sharia-compliant", quotes),
+      buildEvxBasket("EVX Non-Sharia Index", "Not Sharia-compliant", quotes),
+    ],
+    [quotes]
+  );
 
   /* ------- Filter + sort table ------- */
   const filtered = useMemo(() => {
@@ -183,6 +203,13 @@ export default function MarcheClient() {
           tone="down"
           sub={`${notCompliantPct} of CSE-listed companies`}
         />
+      </div>
+
+      {/* ------ EVX baskets ------ */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {evxBaskets.map((basket) => (
+          <EvxIndexCard key={basket.title} basket={basket} />
+        ))}
       </div>
 
       {/* ------ Movers strip ------ */}
@@ -375,6 +402,40 @@ export default function MarcheClient() {
   );
 }
 
+function isValidBasketQuote(quote: QuoteWithSource): boolean {
+  return (
+    quote.quoteSource === "tradingview" &&
+    Number.isFinite(quote.price) &&
+    quote.price > 0 &&
+    Number.isFinite(quote.changePct)
+  );
+}
+
+function average(values: number[]): number | null {
+  if (values.length === 0) return null;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function buildEvxBasket(
+  title: string,
+  status: FinalStatus,
+  quotes: QuoteWithSource[]
+): EvxBasket {
+  const constituents = quotes
+    .filter((quote) => quote.shariaStatus === status)
+    .sort((left, right) => left.name.localeCompare(right.name));
+  const validQuotes = constituents.filter(isValidBasketQuote);
+
+  return {
+    title,
+    count: constituents.length,
+    validCount: validQuotes.length,
+    averagePrice: average(validQuotes.map((quote) => quote.price)),
+    averageChangePct: average(validQuotes.map((quote) => quote.changePct)),
+    constituents,
+  };
+}
+
 function formatDecimalPct(count: number, total: number): string {
   if (total <= 0) return "0,0%";
   return `${((count / total) * 100).toFixed(1).replace(".", ",")}%`;
@@ -523,6 +584,147 @@ function TradingViewWidget({
         }}
       />
     </div>
+  );
+}
+
+function EvxIndexCard({ basket }: { basket: EvxBasket }) {
+  const change = basket.averageChangePct;
+  const tone =
+    typeof change === "number" && change > 0
+      ? "up"
+      : typeof change === "number" && change < 0
+        ? "down"
+        : "neutral";
+  const changeClass =
+    tone === "up" ? "num-up" : tone === "down" ? "num-down" : "num-flat";
+
+  return (
+    <details
+      className="min-h-[132px] rounded-lg border p-4"
+      style={{
+        overflow: "hidden",
+        borderColor: "rgba(255,255,255,0.10)",
+        background: "#05070a",
+      }}
+    >
+      <summary
+        className="cursor-pointer list-none"
+        style={{ color: "var(--text)" }}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="section-label">{basket.title}</p>
+            <p
+              className="mt-2 text-[13px]"
+              style={{ color: "var(--text-dim)" }}
+            >
+              {formatNumber(basket.count, 0)} companies
+            </p>
+          </div>
+          <span
+            className="rounded-md border px-2 py-1 text-[11px] font-semibold"
+            style={{
+              borderColor: "rgba(255,255,255,0.10)",
+              color: "var(--text-dim)",
+              background: "rgba(255,255,255,0.03)",
+            }}
+          >
+            View basket
+          </span>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <p className="section-label">Average live price</p>
+            <p
+              className="mt-2 num text-2xl font-semibold tracking-tight"
+              style={{ color: "var(--text)" }}
+            >
+              {basket.averagePrice === null ? "—" : formatMad(basket.averagePrice)}
+            </p>
+          </div>
+          <div>
+            <p className="section-label">Average daily change</p>
+            <p
+              className={`mt-2 num text-2xl font-semibold tracking-tight ${changeClass}`}
+            >
+              {change === null ? "—" : formatPct(change)}
+            </p>
+          </div>
+        </div>
+      </summary>
+
+      <div
+        className="mt-4 border-t pt-4"
+        style={{ borderColor: "rgba(255,255,255,0.10)" }}
+      >
+        <p className="section-label">
+          Constituents · {formatNumber(basket.validCount, 0)} live quotes
+        </p>
+        <p className="mt-1 text-[11px]" style={{ color: "var(--text-mute)" }}>
+          Averages include companies with valid live TradingView quote data.
+        </p>
+      </div>
+
+      <div
+        className="mt-3 max-h-[320px] overflow-auto rounded-lg border"
+        style={{ borderColor: "rgba(255,255,255,0.10)", background: "#05070a" }}
+      >
+        <div
+          className="grid grid-cols-[1fr_auto_auto] gap-3 border-b px-3 py-2 text-[10.5px] font-semibold uppercase tracking-[0.14em]"
+          style={{ borderColor: "rgba(255,255,255,0.10)", color: "var(--text-mute)" }}
+        >
+          <span>Company</span>
+          <span className="text-right">Price</span>
+          <span className="text-right">Change</span>
+        </div>
+        <ul>
+          {basket.constituents.map((quote) => {
+            const valid = isValidBasketQuote(quote);
+            const quoteTone =
+              valid && quote.changePct > 0
+                ? "num-up"
+                : valid && quote.changePct < 0
+                  ? "num-down"
+                  : "num-flat";
+
+            return (
+              <li key={quote.ticker}>
+                <Link
+                  href={`/marche/${quote.ticker}`}
+                  className="grid grid-cols-[1fr_auto_auto] items-center gap-3 border-b px-3 py-2.5 text-[12.5px] last:border-b-0"
+                  style={{
+                    borderColor: "rgba(255,255,255,0.06)",
+                    color: "var(--text)",
+                    textDecoration: "none",
+                  }}
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate">{quote.name}</span>
+                    <span
+                      className="ticker-cell mt-0.5 block text-[11px]"
+                      style={{ color: "var(--text-mute)" }}
+                    >
+                      {quote.ticker}
+                    </span>
+                  </span>
+                  <span className="num text-right">
+                    {valid
+                      ? formatMad(quote.price)
+                      : "—"}
+                  </span>
+                  <span className={`num text-right ${quoteTone}`}>
+                    {valid
+                      ? formatPct(quote.changePct)
+                      : "—"}
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </details>
   );
 }
 
