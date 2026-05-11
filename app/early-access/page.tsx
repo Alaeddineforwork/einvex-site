@@ -1,20 +1,5 @@
-import EarlyAccessForm from "./early-access-form";
+import { redirect } from "next/navigation";
 
 export default function EarlyAccessPage() {
-  return (
-    <main className="page-shell">
-      <div className="page-container py-16">
-        <div className="mx-auto max-w-3xl surface-card md:p-10">
-          <p className="eyebrow">Join Early Access</p>
-          <h1 className="page-title">Be among the first to discover EinveX</h1>
-          <p className="mt-4 text-base leading-7 sm:text-lg sm:leading-8" style={{ color: "var(--text-dim)" }}>
-            Join our early access list to get updates about the platform, product
-            launch, and new ethical investment screening features.
-          </p>
-
-          <EarlyAccessForm />
-        </div>
-      </div>
-    </main>
-  );
+  redirect("/contact");
 }
